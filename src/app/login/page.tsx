@@ -1,14 +1,20 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Logo } from '@/components/icons/logo';
-import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export const GoogleIcon = () => (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
         <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
@@ -32,13 +38,60 @@ export const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithGoogle, user, loading } = useAuth();
-  
+  const { signInWithGoogle, signInWithEmail, user, loading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
   useEffect(() => {
     if (!loading && user) {
       router.push('/');
     }
   }, [user, loading, router]);
+  
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await signInWithEmail(email, password);
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'Please check your credentials and try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      await signInWithGoogle();
+      router.push('/');
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Google Sign-In Failed',
+        description: 'Could not sign in with Google. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (loading || user) {
+      return (
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
+        <div className="flex items-center space-x-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -49,15 +102,63 @@ export default function LoginPage() {
             <Logo />
           </div>
           <CardTitle className="text-3xl font-headline text-primary">Welcome to ChargeSmart</CardTitle>
-          <CardDescription>Powering your journey. Sign in to continue.</CardDescription>
+          <CardDescription>Sign in to manage your EV charging.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-             <Button onClick={signInWithGoogle} variant="outline" className="w-full font-bold py-3 text-base">
-              <GoogleIcon />
-              Sign in with Google
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign In
             </Button>
+          </form>
+
+          <div className="my-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
           </div>
+
+          <Button onClick={handleGoogleSignIn} variant="outline" className="w-full font-bold" disabled={isSubmitting}>
+            <GoogleIcon />
+            Sign in with Google
+          </Button>
+
+          <p className="mt-6 text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="font-semibold text-primary hover:underline">
+              Sign up
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>
