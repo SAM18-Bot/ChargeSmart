@@ -14,7 +14,7 @@ import {
   updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
-import { Zap, Loader2 } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 interface AuthContextType {
   user: AppUser | null;
