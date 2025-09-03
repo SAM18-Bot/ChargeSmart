@@ -49,19 +49,21 @@ export default function LoginPage() {
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
-    // This effect should only run once on the client side.
-    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        },
-      });
-    setRecaptchaVerifier(verifier);
+    // This effect should only run once on the client side, and only when the component is mounted.
+    if (typeof window !== 'undefined') {
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: (response: any) => {
+              // reCAPTCHA solved, allow signInWithPhoneNumber.
+            },
+          });
+        setRecaptchaVerifier(verifier);
 
-    // Cleanup the verifier on unmount
-    return () => {
-        verifier.clear();
-    };
+        // Cleanup the verifier on unmount
+        return () => {
+            verifier.clear();
+        };
+    }
   }, []);
 
   useEffect(() => {
