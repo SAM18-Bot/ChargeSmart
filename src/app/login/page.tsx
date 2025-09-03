@@ -36,9 +36,6 @@ const GoogleIcon = () => (
     </svg>
 );
 
-// Declare this outside the component to avoid re-creation on re-renders
-let recaptchaVerifier: RecaptchaVerifier | null = null;
-
 export default function LoginPage() {
   const router = useRouter();
   const { signInWithEmail, signInWithGoogle, signInWithPhoneNumber, verifyOtp, user, loading } = useAuth();
@@ -49,16 +46,22 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const { toast } = useToast();
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
-    if (!recaptchaVerifier) {
-      recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    // This effect should only run once on the client side.
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         size: 'invisible',
         callback: (response: any) => {
           // reCAPTCHA solved, allow signInWithPhoneNumber.
         },
       });
-    }
+    setRecaptchaVerifier(verifier);
+
+    // Cleanup the verifier on unmount
+    return () => {
+        verifier.clear();
+    };
   }, []);
 
   useEffect(() => {
@@ -213,7 +216,7 @@ export default function LoginPage() {
                       disabled={isSubmitting}
                     />
                   </div>
-                  <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full font-bold" disabled={isSubmitting || !recaptchaVerifier}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Send OTP
                   </Button>
