@@ -149,6 +149,7 @@ export default function LoginPage() {
           </div>
 
           <Button onClick={handleGoogleSignIn} variant="outline" className="w-full font-bold" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <GoogleIcon />
             Sign in with Google
           </Button>
