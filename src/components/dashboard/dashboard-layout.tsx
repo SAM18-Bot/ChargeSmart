@@ -21,6 +21,12 @@ import QRCode from 'qrcode';
 import Image from 'next/image';
 import { Ticket } from 'lucide-react';
 
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
 export default function DashboardLayout({ user }: { user: User }) {
   const [chargers, setChargers] = useState<Charger[]>(initialChargers);
   const [evs] = useState<EV[]>(initialEvs);
@@ -203,12 +209,60 @@ export default function DashboardLayout({ user }: { user: User }) {
   const handlePayment = async () => {
     if (!paymentDetails) return;
 
-    toast({
-      title: "Payment Successful!",
-      description: `Thank you for charging with ChargeSmart.`,
-    });
+    try {
+      const response = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: paymentDetails.amount * 100 }), // Amount in paise
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create Razorpay order');
+      }
+
+      const order = await response.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'ChargeSmart',
+        description: `Payment for charging at ${paymentDetails.chargerName}`,
+        order_id: order.id,
+        handler: async (response: any) => {
+          toast({
+            title: "Payment Successful!",
+            description: `Thank you for charging with ChargeSmart. Your payment ID is ${response.razorpay_payment_id}.`,
+          });
+          generateQrTicket();
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        theme: {
+          color: '#5B21B6',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     
-    // Generate QR Code
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Payment Failed',
+        description: 'Could not initiate payment. Please try again.',
+      });
+    }
+  }
+
+  const generateQrTicket = async () => {
+    if (!paymentDetails) return;
+     // Generate QR Code
     const ticketData = {
       charger: paymentDetails.chargerName,
       user: user.name,
