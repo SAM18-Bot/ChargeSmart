@@ -6,13 +6,13 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  projectId: "chargesmart-4tzxm",
-  appId: "1:133398203773:web:6c8be7ca8b4dd74f7a5014",
-  storageBucket: "chargesmart-4tzxm.firebasestorage.app",
-  apiKey: "AIzaSyBHy5nnYUcommRXT9QRMU8RcellfEvWN8I",
-  authDomain: "chargesmart-4tzxm.firebaseapp.com",
-  measurementId: "",
-  messagingSenderId: "133398203773"
+  "projectId": "chargesmart-4tzxm",
+  "appId": "1:133398203773:web:6c8be7ca8b4dd74f7a5014",
+  "storageBucket": "chargesmart-4tzxm.firebasestorage.app",
+  "apiKey": "AIzaSyBHy5nnYUcommRXT9QRMU8RcellfEvWN8I",
+  "authDomain": "chargesmart-4tzxm.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "133398203773"
 };
 
 // Initialize Firebase
