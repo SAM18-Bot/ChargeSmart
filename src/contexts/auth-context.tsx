@@ -25,24 +25,12 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
-  signInWithPhoneNumber: (phoneNumber: string) => Promise<void>;
+  signInWithPhoneNumber: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
   logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Helper to set up reCAPTCHA verifier
-const setupRecaptcha = () => {
-  if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        }
-      });
-  }
-}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -50,11 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  
-  useEffect(() => {
-    setupRecaptcha();
-  }, [])
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
@@ -99,13 +82,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithEmailAndPassword(auth, email, pass);
   }
 
-  const signInWithPhoneNumber = async (phoneNumber: string) => {
-    if (window.recaptchaVerifier) {
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+  const signInWithPhoneNumber = async (phoneNumber: string, verifier: RecaptchaVerifier) => {
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
       setConfirmationResult(confirmation);
-    } else {
-      throw new Error("reCAPTCHA not initialized.");
-    }
   }
 
   const verifyOtp = async (otp: string) => {
@@ -137,9 +116,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-  }
-}

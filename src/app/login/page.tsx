@@ -12,6 +12,8 @@ import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RecaptchaVerifier } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const GoogleIcon = () => (
     <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -34,6 +36,8 @@ const GoogleIcon = () => (
     </svg>
 );
 
+// Declare this outside the component to avoid re-creation on re-renders
+let recaptchaVerifier: RecaptchaVerifier | null = null;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +49,17 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!recaptchaVerifier) {
+      recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && user) {
@@ -89,7 +104,10 @@ export default function LoginPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await signInWithPhoneNumber(phone);
+      if (!recaptchaVerifier) {
+        throw new Error("Recaptcha not initialized");
+      }
+      await signInWithPhoneNumber(phone, recaptchaVerifier);
       setOtpSent(true);
       toast({
         title: 'OTP Sent',
