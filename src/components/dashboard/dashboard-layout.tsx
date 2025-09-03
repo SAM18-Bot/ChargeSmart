@@ -17,12 +17,17 @@ import Chatbot from '../chatbot/chatbot';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Calendar } from '../ui/calendar';
 import { add, format, set } from 'date-fns';
+import QRCode from 'qrcode';
+import Image from 'next/image';
+import { Ticket } from 'lucide-react';
 
 export default function DashboardLayout({ user }: { user: User }) {
   const [chargers, setChargers] = useState<Charger[]>(initialChargers);
   const [evs] = useState<EV[]>(initialEvs);
   const [isChargeModalOpen, setChargeModalOpen] = useState(false);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [isQrModalOpen, setQrModalOpen] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<{ amount: number; chargerName: string } | null>(null);
   
@@ -195,11 +200,46 @@ export default function DashboardLayout({ user }: { user: User }) {
     return () => clearInterval(interval);
   }, [toast, user.id]);
   
-  const handlePayment = () => {
+  const handlePayment = async () => {
+    if (!paymentDetails) return;
+
     toast({
       title: "Payment Successful!",
       description: `Thank you for charging with ChargeSmart.`,
     });
+    
+    // Generate QR Code
+    const ticketData = {
+      charger: paymentDetails.chargerName,
+      user: user.name,
+      email: user.email,
+      amount: paymentDetails.amount.toFixed(2),
+      date: format(new Date(), "PPpp"),
+      transactionId: `CS-${Date.now()}`
+    };
+
+    try {
+      const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData), {
+        errorCorrectionLevel: 'H',
+        type: 'image/jpeg',
+        quality: 0.9,
+        margin: 1,
+        color: {
+          dark:"#29003D",
+          light:"#FFFFFF"
+        }
+      });
+      setQrCodeData(qrDataUrl);
+      setQrModalOpen(true);
+    } catch (err) {
+      console.error('Failed to generate QR code', err);
+      toast({
+        variant: 'destructive',
+        title: "QR Generation Failed",
+        description: "Could not generate your ticket. Please contact support."
+      })
+    }
+
     setPaymentModalOpen(false);
     setPaymentDetails(null);
   }
@@ -340,6 +380,26 @@ export default function DashboardLayout({ user }: { user: User }) {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* QR Code Ticket Modal */}
+      <Dialog open={isQrModalOpen} onOpenChange={setQrModalOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle className="font-headline text-2xl flex items-center gap-2"><Ticket className="h-6 w-6 text-primary"/> Your Charging Ticket</DialogTitle>
+                  <DialogDescription>Scan this QR code or keep it for your records.</DialogDescription>
+              </DialogHeader>
+              <div className="py-4 flex items-center justify-center">
+                  {qrCodeData && (
+                    <Image src={qrCodeData} alt="QR Code Ticket" width={256} height={256} className="rounded-lg border-4 border-primary p-2" />
+                  )}
+              </div>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => { setQrModalOpen(false); setQrCodeData(null); }}>Close</Button>
+                  <Button onClick={() => window.print()}>Print Ticket</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
