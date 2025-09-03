@@ -22,7 +22,7 @@ export default function DashboardPage() {
       <div className="flex flex-col items-center justify-center h-screen bg-background">
         <div className="flex items-center space-x-4">
           <Zap className="h-12 w-12 text-primary animate-pulse" />
-          <h1 className="text-4xl font-headline font-bold text-primary">ChargeZen</h1>
+          <h1 className="text-4xl font-headline font-bold text-primary">ChargeSmart</h1>
         </div>
         <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
       </div>

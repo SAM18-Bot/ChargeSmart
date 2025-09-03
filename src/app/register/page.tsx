@@ -36,7 +36,7 @@ export default function RegisterPage() {
             <Logo />
           </div>
           <CardTitle className="text-3xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Join ChargeZen to power up your EV journey</CardDescription>
+          <CardDescription>Join ChargeSmart to power up your EV journey</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">

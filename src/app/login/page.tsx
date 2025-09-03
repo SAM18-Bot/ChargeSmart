@@ -35,7 +35,7 @@ export default function LoginPage() {
             <Logo />
           </div>
           <CardTitle className="text-3xl font-headline">Welcome Back!</CardTitle>
-          <CardDescription>Sign in to your ChargeZen account</CardDescription>
+          <CardDescription>Sign in to your ChargeSmart account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">

@@ -126,7 +126,7 @@ export default function DashboardLayout({ user }: { user: User }) {
   const handlePayment = () => {
     toast({
       title: "Payment Successful!",
-      description: `Thank you for charging with ChargeZen.`,
+      description: `Thank you for charging with ChargeSmart.`,
     });
     setPaymentModalOpen(false);
     setPaymentDetails(null);

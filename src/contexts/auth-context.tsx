@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Simulate checking for a logged-in user in localStorage
     try {
-      const storedUser = localStorage.getItem('chargezen_user');
+      const storedUser = localStorage.getItem('chargesmart_user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (foundUser) {
       const { password, ...userToStore } = foundUser;
       setUser(userToStore);
-      localStorage.setItem('chargezen_user', JSON.stringify(userToStore));
+      localStorage.setItem('chargesmart_user', JSON.stringify(userToStore));
     } else {
       throw new Error('Invalid email or password');
     }
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('chargezen_user');
+    localStorage.removeItem('chargesmart_user');
     router.push('/login');
   };
 
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     mockUsers.push(newUser);
     const { password, ...userToStore } = newUser;
     setUser(userToStore);
-    localStorage.setItem('chargezen_user', JSON.stringify(userToStore));
+    localStorage.setItem('chargesmart_user', JSON.stringify(userToStore));
   };
 
   const value = { user, loading, login, logout, register };
