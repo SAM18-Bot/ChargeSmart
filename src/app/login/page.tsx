@@ -49,29 +49,25 @@ export default function LoginPage() {
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
-    // This effect should only run once on the client side, and only when the component is mounted.
-    if (typeof window !== 'undefined') {
-        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: (response: any) => {
-              // reCAPTCHA solved, allow signInWithPhoneNumber.
-            },
-          });
-        setRecaptchaVerifier(verifier);
-
-        // Cleanup the verifier on unmount
-        return () => {
-            verifier.clear();
-        };
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!loading && user) {
+    if (user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, router]);
   
+  useEffect(() => {
+    // This effect should only run once on the client side to initialize reCAPTCHA.
+    // We check if it's already initialized to avoid creating multiple instances.
+    if (!recaptchaVerifier) {
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: (response: any) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+          },
+      });
+      setRecaptchaVerifier(verifier);
+    }
+  }, [recaptchaVerifier]);
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
