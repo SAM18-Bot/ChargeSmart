@@ -128,7 +128,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && email && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
           </form>
@@ -145,7 +145,7 @@ export default function LoginPage() {
           </div>
 
           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-             {isSubmitting ? (
+             {isSubmitting && !email ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
              ) : (
                 <GoogleIcon />
