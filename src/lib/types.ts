@@ -33,6 +33,8 @@ export interface Charger {
   id: string;
   name: string;
   status: 'Available' | 'Occupied';
+  lat: number;
+  lng: number;
   currentUser?: User;
   currentVehicle?: CurrentVehicle;
   kwhReserved?: number;

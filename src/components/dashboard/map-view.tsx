@@ -1,75 +1,238 @@
 'use client';
 
-import Image from 'next/image';
+import { useState } from 'react';
+import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import { Charger } from '@/lib/types';
-import { Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Zap, Users, Navigation, Loader2 } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
 interface MapViewProps {
   chargers: Charger[];
 }
 
+const containerStyle = {
+  width: '100%',
+  height: '100%',
+  minHeight: '400px',
+  borderRadius: '0.8rem'
+};
+
+const center = {
+  lat: 18.5204,
+  lng: 73.8567
+};
+
+const mapOptions = {
+  disableDefaultUI: true,
+  zoomControl: true,
+  styles: [
+    {
+      "featureType": "all",
+      "elementType": "labels.text.fill",
+      "stylers": [
+        { "color": "#7c93a3" },
+        { "lightness": "-10" }
+      ]
+    },
+    {
+      "featureType": "administrative.country",
+      "elementType": "geometry",
+      "stylers": [
+        { "visibility": "on" }
+      ]
+    },
+    {
+      "featureType": "administrative.country",
+      "elementType": "geometry.stroke",
+      "stylers": [
+        { "color": "#a0a4a5" }
+      ]
+    },
+    {
+      "featureType": "administrative.province",
+      "elementType": "geometry.stroke",
+      "stylers": [
+        { "color": "#62838e" }
+      ]
+    },
+    {
+      "featureType": "landscape",
+      "elementType": "geometry.fill",
+      "stylers": [
+        { "color": "#f2f5f6" }
+      ]
+    },
+    {
+      "featureType": "landscape.man_made",
+      "elementType": "geometry.stroke",
+      "stylers": [
+        { "color": "#a0a4a5" }
+      ]
+    },
+    {
+      "featureType": "poi",
+      "elementType": "all",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "road",
+      "elementType": "all",
+      "stylers": [
+        { "saturation": -100 },
+        { "lightness": 45 },
+        { "visibility": "simplified" }
+      ]
+    },
+    {
+      "featureType": "road",
+      "elementType": "geometry.fill",
+      "stylers": [
+        { "color": "#ffffff" }
+      ]
+    },
+    {
+      "featureType": "road",
+      "elementType": "labels.text.fill",
+      "stylers": [
+        { "color": "#7c93a3" }
+      ]
+    },
+    {
+      "featureType": "road",
+      "elementType": "labels.icon",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "road.highway",
+      "elementType": "all",
+      "stylers": [
+        { "visibility": "simplified" }
+      ]
+    },
+    {
+      "featureType": "road.highway",
+      "elementType": "geometry.fill",
+      "stylers": [
+        { "color": "#e5e5e5" }
+      ]
+    },
+    {
+      "featureType": "road.highway",
+      "elementType": "labels.text",
+      "stylers": [
+        { "color": "#7c93a3" }
+      ]
+    },
+    {
+      "featureType": "road.arterial",
+      "elementType": "labels.icon",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "transit",
+      "elementType": "all",
+      "stylers": [
+        { "visibility": "off" }
+      ]
+    },
+    {
+      "featureType": "water",
+      "elementType": "all",
+      "stylers": [
+        { "color": "#dde6e8" },
+        { "visibility": "on" }
+      ]
+    }
+  ]
+};
+
 export function MapView({ chargers }: MapViewProps) {
-  const markerPositions = [
-    { top: '25%', left: '30%' },
-    { top: '45%', left: '55%' },
-    { top: '60%', left: '20%' },
-    { top: '75%', left: '70%' },
-    { top: '35%', left: '80%' },
-    { top: '50%', left: '10%' },
-  ];
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+  });
+
+  const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
+
+  const handleMarkerClick = (charger: Charger) => {
+    setSelectedCharger(charger);
+  };
+
+  const handleDirectionsClick = (charger: Charger) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${charger.lat},${charger.lng}`;
+    window.open(url, '_blank');
+  };
+
+  if (loadError) {
+    return <Card><CardContent className="p-4"><p className='text-destructive'>Error loading maps. Please check the API key.</p></CardContent></Card>;
+  }
 
   return (
-    <Card className="overflow-hidden shadow-lg">
-      <CardContent className="p-0 relative">
-        <div className="aspect-square relative w-full">
-          <Image
-            src="https://picsum.photos/seed/pune-map/800/800"
-            alt="Map of Pune with charger locations"
-            data-ai-hint="map satellite"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-        </div>
-        <TooltipProvider>
-          {chargers.map((charger, index) => {
-            const position = markerPositions[index % markerPositions.length];
-            return (
-              <Tooltip key={charger.id}>
-                <TooltipTrigger asChild>
-                  <div
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    style={{ top: position.top, left: position.left }}
-                  >
-                    <div className="relative">
-                      <Zap
-                        className={cn(
-                          'h-8 w-8 text-white drop-shadow-lg transition-all duration-300 hover:scale-125',
-                          charger.status === 'Available' ? 'fill-green-400' : 'fill-yellow-400'
-                        )}
-                        strokeWidth={1.5}
-                      />
-                      {charger.status === 'Occupied' && (
-                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
-                        </span>
-                      )}
+    <Card className="overflow-hidden shadow-lg aspect-square">
+      <CardContent className="p-0 h-full w-full">
+        {isLoaded ? (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={12}
+            options={mapOptions}
+          >
+            {chargers.map(charger => (
+              <MarkerF
+                key={charger.id}
+                position={{ lat: charger.lat, lng: charger.lng }}
+                onClick={() => handleMarkerClick(charger)}
+                icon={{
+                  path: 'M13 10V3L4 14h7v7l9-11h-7z',
+                  fillColor: charger.status === 'Available' ? '#4ade80' : '#facc15',
+                  fillOpacity: 1,
+                  strokeWeight: 1,
+                  strokeColor: '#000000',
+                  scale: 1.5,
+                  anchor: new window.google.maps.Point(12, 12),
+                }}
+              />
+            ))}
+
+            {selectedCharger && (
+              <InfoWindowF
+                position={{ lat: selectedCharger.lat, lng: selectedCharger.lng }}
+                onCloseClick={() => setSelectedCharger(null)}
+                options={{
+                    pixelOffset: new window.google.maps.Size(0, -30)
+                }}
+              >
+                <div className="p-2 font-body max-w-xs">
+                  <h3 className="font-bold font-headline text-lg mb-2">{selectedCharger.name}</h3>
+                  <div className='flex justify-between items-center mb-3'>
+                    <Badge variant={selectedCharger.status === 'Available' ? 'default' : 'destructive'} className={selectedCharger.status === 'Available' ? 'bg-green-500' : 'bg-yellow-500'}>
+                        {selectedCharger.status}
+                    </Badge>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                        <Users className="mr-1 h-4 w-4" /> {selectedCharger.queue.length} in queue
                     </div>
                   </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-bold">{charger.name}</p>
-                  <p>Status: {charger.status}</p>
-                  {charger.status === 'Occupied' && <p>Queue: {charger.queue.length}</p>}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </TooltipProvider>
+                  <Button onClick={() => handleDirectionsClick(selectedCharger)} className="w-full">
+                    <Navigation className="mr-2 h-4 w-4" />
+                    Get Directions
+                  </Button>
+                </div>
+              </InfoWindowF>
+            )}
+          </GoogleMap>
+        ) : (
+          <div className="flex items-center justify-center h-full w-full bg-muted">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
