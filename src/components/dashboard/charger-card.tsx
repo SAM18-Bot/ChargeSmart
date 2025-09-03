@@ -25,16 +25,7 @@ export default function ChargerCard({ charger, onStartCharge, onJoinQueue, curre
   const isCurrentUserCharging = charger.status === 'Occupied' && charger.currentUser?.id === currentUser.id;
   const isCurrentUserInQueue = charger.queue.some(item => item.user.id === currentUser.id);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (charger.status === 'Occupied' && charger.remainingTime) {
-      // This would in a real app be driven by backend data, here we simulate countdown
-    }
-    return () => clearInterval(interval);
-  }, [charger.status, charger.remainingTime]);
-
-
-  useEffect(() => {
+  const fetchEstimate = () => {
     if (charger.status === 'Occupied' && charger.currentUser && charger.currentVehicle) {
       setIsLoadingTime(true);
       estimateTimeTillEmpty({
@@ -47,11 +38,23 @@ export default function ChargerCard({ charger, onStartCharge, onJoinQueue, curre
         setEstimatedTime(response.estimatedTimeTillEmpty);
       }).catch(err => {
         console.error("Failed to estimate time:", err);
-        setEstimatedTime('~ 45 mins');
+        setEstimatedTime('~ 45 mins'); // Fallback estimate
       }).finally(() => {
         setIsLoadingTime(false);
       });
     }
+  };
+
+  useEffect(() => {
+    fetchEstimate();
+    // Set up an interval to re-fetch the estimate every 30 seconds
+    const interval = setInterval(() => {
+      fetchEstimate();
+    }, 30000); 
+
+    // Clear the interval when the component unmounts or dependencies change
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [charger.status, charger.id, charger.currentUser, charger.currentVehicle, charger.kwhReserved]);
 
 
@@ -97,9 +100,9 @@ export default function ChargerCard({ charger, onStartCharge, onJoinQueue, curre
                 <span>Charging in progress...</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
-                {isLoadingTime ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />}
+                {isLoadingTime && !estimatedTime ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />}
                 <span>
-                  {isLoadingTime ? 'Estimating free time...' : `Free in approx. ${estimatedTime || 'N/A'}`}
+                  {isLoadingTime && !estimatedTime ? 'Estimating time...' : `Free in approx. ${estimatedTime || 'N/A'}`}
                 </span>
               </div>
             </div>
