@@ -20,6 +20,15 @@ export interface QueueItem {
   joinTime: Date;
 }
 
+export interface Booking {
+  id: string;
+  chargerId: string;
+  userId: string;
+  userName: string;
+  startTime: Date;
+  endTime: Date;
+}
+
 export interface Charger {
   id: string;
   name: string;
@@ -30,4 +39,5 @@ export interface Charger {
   startTime?: Date;
   estimatedEndTime?: Date;
   queue: QueueItem[];
+  bookings?: Booking[];
 }

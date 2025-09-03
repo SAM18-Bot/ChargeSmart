@@ -13,12 +13,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface ChargerCardProps {
   charger: Charger;
-  onStartCharge: (chargerId: string) => void;
+  onCharge: (chargerId: string) => void;
   onJoinQueue: (chargerId: string) => void;
   currentUser: User;
 }
 
-export default function ChargerCard({ charger, onStartCharge, onJoinQueue, currentUser }: ChargerCardProps) {
+export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUser }: ChargerCardProps) {
   const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
   const [isLoadingTime, setIsLoadingTime] = useState(false);
   
@@ -46,16 +46,15 @@ export default function ChargerCard({ charger, onStartCharge, onJoinQueue, curre
   };
 
   useEffect(() => {
-    fetchEstimate();
-    // Set up an interval to re-fetch the estimate every 30 seconds
-    const interval = setInterval(() => {
+    if (charger.status === 'Occupied') {
       fetchEstimate();
-    }, 30000); 
-
-    // Clear the interval when the component unmounts or dependencies change
-    return () => clearInterval(interval);
+      // Set up an interval to re-fetch the estimate every 30 seconds
+      const interval = setInterval(fetchEstimate, 30000); 
+      // Clear the interval when the component unmounts or dependencies change
+      return () => clearInterval(interval);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charger.status, charger.id, charger.currentUser, charger.currentVehicle, charger.kwhReserved]);
+  }, [charger.status, charger.id]);
 
 
   const getBadgeVariant = (status: 'Available' | 'Occupied') => {
@@ -133,8 +132,8 @@ export default function ChargerCard({ charger, onStartCharge, onJoinQueue, curre
         
         <div className="mt-6">
           {charger.status === 'Available' ? (
-            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" onClick={() => onStartCharge(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
-              Start Charging
+            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" onClick={() => onCharge(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
+              Charge Now
             </Button>
           ) : (
             <TooltipProvider>

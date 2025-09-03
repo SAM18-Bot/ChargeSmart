@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Chatbot from '../chatbot/chatbot';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Calendar } from '../ui/calendar';
+import { add, format, set } from 'date-fns';
 
 export default function DashboardLayout({ user }: { user: User }) {
   const [chargers, setChargers] = useState<Charger[]>(initialChargers);
@@ -22,13 +25,22 @@ export default function DashboardLayout({ user }: { user: User }) {
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<{ amount: number; chargerName: string } | null>(null);
+  
+  // Charge Modal State
   const [selectedEvModel, setSelectedEvModel] = useState('');
   const [batteryPercentage, setBatteryPercentage] = useState('');
+  const [kwhAmount, setKwhAmount] = useState('');
+  const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
+  const [bookingTime, setBookingTime] = useState<string>('');
+  
   const { toast } = useToast();
 
   const handleOpenChargeModal = (chargerId: string) => {
-    setSelectedCharger(chargers.find(c => c.id === chargerId) || null);
-    setChargeModalOpen(true);
+    const charger = chargers.find(c => c.id === chargerId);
+    if(charger) {
+        setSelectedCharger(charger);
+        setChargeModalOpen(true);
+    }
   };
   
   const handleJoinQueue = (chargerId: string) => {
@@ -45,18 +57,20 @@ export default function DashboardLayout({ user }: { user: User }) {
     }));
   };
 
-  const handleStartCharging = () => {
+  const handleSmartCharge = () => {
     if (!selectedCharger || !selectedEvModel || !batteryPercentage) return;
     
-    const kwhNeeded = 50; // Mock calculation
-    
+    // Mock calculation for demo
+    const kwhNeeded = (100 - parseInt(batteryPercentage)) * 0.3; // Assuming 30kWh battery
+    const chargeTimeMinutes = Math.round((kwhNeeded / 22) * 60); // Assuming 22kW charger speed
+
     setChargers(prevChargers => prevChargers.map(c => {
       if (c.id === selectedCharger.id) {
         toast({
-          title: "Charging Started!",
-          description: `Your ${selectedEvModel} is now charging at ${c.name}.`,
+          title: "Smart Charging Started!",
+          description: `Your ${selectedEvModel} will charge for approximately ${chargeTimeMinutes} minutes.`,
         });
-        const chargeEndTime = new Date(new Date().getTime() + 30 * 60000); // 30 mins from now
+        const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
         return {
           ...c,
           status: 'Occupied',
@@ -70,11 +84,66 @@ export default function DashboardLayout({ user }: { user: User }) {
       return c;
     }));
     
+    closeAndResetModal();
+  };
+
+  const handleDirectCharge = () => {
+    if (!selectedCharger || !kwhAmount) return;
+    
+    const kwh = parseInt(kwhAmount, 10);
+    const chargeTimeMinutes = Math.round((kwh / 22) * 60);
+
+     setChargers(prevChargers => prevChargers.map(c => {
+      if (c.id === selectedCharger.id) {
+        toast({
+          title: "Direct Charging Started!",
+          description: `Charging ${kwh} kWh. This will take about ${chargeTimeMinutes} minutes.`,
+        });
+        const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
+        return {
+          ...c,
+          status: 'Occupied',
+          currentUser: user,
+          currentVehicle: { model: 'Unknown Vehicle' },
+          kwhReserved: kwh,
+          startTime: new Date(),
+          estimatedEndTime: chargeEndTime,
+        };
+      }
+      return c;
+    }));
+    
+    closeAndResetModal();
+  }
+
+  const handleBooking = () => {
+    if (!selectedCharger || !bookingDate || !bookingTime) return;
+
+    const [hours, minutes] = bookingTime.split(':').map(Number);
+    const bookingStart = set(bookingDate, { hours, minutes });
+    const bookingEnd = add(bookingStart, { hours: 1 }); // 1-hour slots
+
+    toast({
+        title: "Slot Booked!",
+        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}.`,
+    });
+    
+    // Here you would typically add the booking to the charger's schedule.
+    // For this demo, we'll just show the toast.
+    
+    closeAndResetModal();
+  }
+
+  const closeAndResetModal = () => {
     setChargeModalOpen(false);
     setSelectedCharger(null);
     setSelectedEvModel('');
     setBatteryPercentage('');
-  };
+    setKwhAmount('');
+    setBookingDate(new Date());
+    setBookingTime('');
+  }
+
 
   // Simulate charge completion and payment
   useEffect(() => {
@@ -85,8 +154,10 @@ export default function DashboardLayout({ user }: { user: User }) {
           if (charger.status === 'Occupied' && charger.estimatedEndTime && new Date() > charger.estimatedEndTime) {
             // Charging finished
             const cost = (charger.kwhReserved || 50) * 15; // price per kwh
-            setPaymentDetails({ amount: cost, chargerName: charger.name });
-            setPaymentModalOpen(true);
+            if (charger.currentUser?.id === user.id) {
+              setPaymentDetails({ amount: cost, chargerName: charger.name });
+              setPaymentModalOpen(true);
+            }
 
             // Reset charger or move to next in queue
             const nextInQueue = charger.queue.length > 0 ? charger.queue[0] : null;
@@ -122,7 +193,7 @@ export default function DashboardLayout({ user }: { user: User }) {
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(interval);
-  }, [toast]);
+  }, [toast, user.id]);
   
   const handlePayment = () => {
     toast({
@@ -132,6 +203,13 @@ export default function DashboardLayout({ user }: { user: User }) {
     setPaymentModalOpen(false);
     setPaymentDetails(null);
   }
+  
+  const timeSlots = Array.from({ length: 24 * 2 }, (_, i) => {
+    const totalMinutes = i * 30;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
@@ -145,7 +223,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 <ChargerCard
                   key={charger.id}
                   charger={charger}
-                  onStartCharge={handleOpenChargeModal}
+                  onCharge={handleOpenChargeModal}
                   onJoinQueue={handleJoinQueue}
                   currentUser={user}
                 />
@@ -161,32 +239,88 @@ export default function DashboardLayout({ user }: { user: User }) {
       
       <Chatbot />
       
-      {/* Start Charging Modal */}
+      {/* Charging Options Modal */}
       <Dialog open={isChargeModalOpen} onOpenChange={setChargeModalOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-headline text-2xl">Start Charging at {selectedCharger?.name}</DialogTitle>
-            <DialogDescription>Select your vehicle and confirm details to begin.</DialogDescription>
+            <DialogTitle className="font-headline text-2xl">Charge at {selectedCharger?.name}</DialogTitle>
+            <DialogDescription>Select your preferred charging method.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <Label>EV Model</Label>
-                <Select onValueChange={setSelectedEvModel} required>
-                    <SelectTrigger><SelectValue placeholder="Select your EV" /></SelectTrigger>
-                    <SelectContent>
-                        {evs.map(ev => <SelectItem key={ev.model} value={ev.model}>{ev.model}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="space-y-2">
-                <Label>Current Battery %</Label>
-                <Input type="number" min="0" max="100" value={batteryPercentage} onChange={e => setBatteryPercentage(e.target.value)} placeholder="e.g., 20" required/>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setChargeModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleStartCharging} disabled={!selectedEvModel || !batteryPercentage}>Confirm & Charge</Button>
-          </DialogFooter>
+          <Tabs defaultValue="smart" className="w-full pt-4">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="smart">Smart Charge</TabsTrigger>
+                <TabsTrigger value="direct">Direct kWh</TabsTrigger>
+                <TabsTrigger value="book">Book a Slot</TabsTrigger>
+            </TabsList>
+            {/* Smart Charge: Based on Vehicle & Battery */}
+            <TabsContent value="smart">
+                <div className="space-y-4 py-4">
+                    <p className="text-sm text-muted-foreground">Let us optimize charging based on your car's needs.</p>
+                    <div className="space-y-2">
+                        <Label>EV Model</Label>
+                        <Select onValueChange={setSelectedEvModel} value={selectedEvModel} required>
+                            <SelectTrigger><SelectValue placeholder="Select your EV" /></SelectTrigger>
+                            <SelectContent>
+                                {evs.map(ev => <SelectItem key={ev.model} value={ev.model}>{ev.model}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Current Battery %</Label>
+                        <Input type="number" min="0" max="100" value={batteryPercentage} onChange={e => setBatteryPercentage(e.target.value)} placeholder="e.g., 20" required/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
+                    <Button onClick={handleSmartCharge} disabled={!selectedEvModel || !batteryPercentage}>Confirm & Charge</Button>
+                </DialogFooter>
+            </TabsContent>
+            {/* Direct Charge: Based on kWh */}
+            <TabsContent value="direct">
+                <div className="space-y-4 py-4">
+                     <p className="text-sm text-muted-foreground">Specify the exact amount of electricity you need.</p>
+                    <div className="space-y-2">
+                        <Label>kWh to Charge</Label>
+                        <Input type="number" min="1" max="100" value={kwhAmount} onChange={e => setKwhAmount(e.target.value)} placeholder="e.g., 25" required/>
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
+                    <Button onClick={handleDirectCharge} disabled={!kwhAmount}>Start Direct Charge</Button>
+                </DialogFooter>
+            </TabsContent>
+            {/* Advance Booking */}
+            <TabsContent value="book">
+                <div className="space-y-4 py-4">
+                     <p className="text-sm text-muted-foreground">Reserve this charger for a future time slot.</p>
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                             <Label>Date</Label>
+                             <Calendar
+                                mode="single"
+                                selected={bookingDate}
+                                onSelect={setBookingDate}
+                                disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
+                                className="rounded-md border p-0"
+                            />
+                        </div>
+                        <div className="flex-1">
+                             <Label>Time (30-min slots)</Label>
+                             <Select onValueChange={setBookingTime} value={bookingTime} required>
+                                <SelectTrigger><SelectValue placeholder="Select a time" /></SelectTrigger>
+                                <SelectContent className="max-h-60">
+                                    {timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                </SelectContent>
+                             </Select>
+                        </div>
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
+                    <Button onClick={handleBooking} disabled={!bookingDate || !bookingTime}>Book Slot</Button>
+                </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
