@@ -138,7 +138,7 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
           ) : (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="w-full">
+                <TooltipTrigger asChild className="w-full">
                   <Button variant="outline" className="w-full" onClick={() => onJoinQueue(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
                     Join Queue
                   </Button>
