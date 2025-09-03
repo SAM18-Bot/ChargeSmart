@@ -13,9 +13,6 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   User as FirebaseUser,
-  RecaptchaVerifier,
-  signInWithPhoneNumber as firebaseSignInWithPhoneNumber,
-  ConfirmationResult
 } from 'firebase/auth';
 import { Zap } from 'lucide-react';
 
@@ -25,8 +22,6 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
-  signInWithPhoneNumber: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -35,7 +30,6 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,10 +38,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (firebaseUser) {
         const appUser: AppUser = {
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || firebaseUser.phoneNumber || 'User',
+          name: firebaseUser.displayName || 'User',
           email: firebaseUser.email || 'No Email',
           photoURL: firebaseUser.photoURL || undefined,
-          phoneNumber: firebaseUser.phoneNumber || undefined,
         };
         setUser(appUser);
       } else {
@@ -82,25 +75,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithEmailAndPassword(auth, email, pass);
   }
 
-  const signInWithPhoneNumber = async (phoneNumber: string, verifier: RecaptchaVerifier) => {
-      const confirmation = await firebaseSignInWithPhoneNumber(auth, phoneNumber, verifier);
-      setConfirmationResult(confirmation);
-  }
-
-  const verifyOtp = async (otp: string) => {
-    if (confirmationResult) {
-      await confirmationResult.confirm(otp);
-    } else {
-      throw new Error("No OTP confirmation result found.");
-    }
-  }
-
   const logout = async () => {
     await signOut(auth);
     router.push('/login');
   };
 
-  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, signInWithPhoneNumber, verifyOtp, logout };
+  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, logout };
 
   if (loading && !['/login', '/register'].includes(pathname)) {
       return (
