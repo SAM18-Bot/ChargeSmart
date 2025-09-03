@@ -14,7 +14,7 @@ import {
   updateProfile,
   User as FirebaseUser,
   RecaptchaVerifier,
-  signInWithPhoneNumber,
+  signInWithPhoneNumber as firebaseSignInWithPhoneNumber,
   ConfirmationResult
 } from 'firebase/auth';
 import { Zap } from 'lucide-react';
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signInWithPhoneNumber = async (phoneNumber: string, verifier: RecaptchaVerifier) => {
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, verifier);
+      const confirmation = await firebaseSignInWithPhoneNumber(auth, phoneNumber, verifier);
       setConfirmationResult(confirmation);
   }
 
