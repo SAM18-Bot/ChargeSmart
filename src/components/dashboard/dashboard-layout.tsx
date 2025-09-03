@@ -30,6 +30,16 @@ declare global {
 const PRICE_PER_KWH = 18; // Rupees per kWh
 const CHARGER_POWER_KW = 22; // kW
 
+// This will hold the details of the charge request before payment
+interface PendingCharge {
+    charger: Charger;
+    type: 'smart' | 'direct';
+    kwh: number;
+    cost: number;
+    evModel?: string;
+    batteryPercentage?: number;
+}
+
 export default function DashboardLayout({ user }: { user: User }) {
   const [chargers, setChargers] = useState<Charger[]>(initialChargers);
   const [evs] = useState<EV[]>(initialEvs);
@@ -38,7 +48,8 @@ export default function DashboardLayout({ user }: { user: User }) {
   const [isQrModalOpen, setQrModalOpen] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
-  const [paymentDetails, setPaymentDetails] = useState<{ amount: number; chargerName: string } | null>(null);
+  
+  const [pendingCharge, setPendingCharge] = useState<PendingCharge | null>(null);
   
   // Charge Modal State
   const [selectedEvModel, setSelectedEvModel] = useState('');
@@ -71,7 +82,13 @@ export default function DashboardLayout({ user }: { user: User }) {
     }));
   };
 
-  const handleSmartCharge = () => {
+  const initiatePayment = (chargeDetails: PendingCharge) => {
+    setPendingCharge(chargeDetails);
+    setPaymentModalOpen(true);
+    closeAndResetModal(); // Close the charging options modal
+  };
+
+  const handleSmartChargeRequest = () => {
     if (!selectedCharger || !selectedEvModel || !batteryPercentage) return;
     
     const selectedEVObject = evs.find(ev => ev.model === selectedEvModel);
@@ -81,33 +98,20 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
 
     const currentBattery = parseInt(batteryPercentage, 10);
-    const kwhNeeded = ((100 - currentBattery) / 100) * selectedEVObject.batteryCapacity;
-    const chargeTimeMinutes = Math.round((kwhNeeded / CHARGER_POWER_KW) * 60);
+    const kwhNeeded = parseFloat((((100 - currentBattery) / 100) * selectedEVObject.batteryCapacity).toFixed(2));
+    const cost = parseFloat((kwhNeeded * PRICE_PER_KWH).toFixed(2));
 
-    setChargers(prevChargers => prevChargers.map(c => {
-      if (c.id === selectedCharger.id) {
-        toast({
-          title: "Smart Charging Started!",
-          description: `Your ${selectedEvModel} will charge for approximately ${chargeTimeMinutes} minutes.`,
-        });
-        const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
-        return {
-          ...c,
-          status: 'Occupied',
-          currentUser: user,
-          currentVehicle: { model: selectedEvModel, batteryPercentage: parseInt(batteryPercentage) },
-          kwhReserved: kwhNeeded,
-          startTime: new Date(),
-          estimatedEndTime: chargeEndTime,
-        };
-      }
-      return c;
-    }));
-    
-    closeAndResetModal();
+    initiatePayment({
+        charger: selectedCharger,
+        type: 'smart',
+        kwh: kwhNeeded,
+        cost,
+        evModel: selectedEvModel,
+        batteryPercentage: currentBattery
+    });
   };
 
-  const handleDirectCharge = () => {
+  const handleDirectChargeRequest = () => {
     if (!selectedCharger || !kwhAmount) return;
     
     const kwh = parseInt(kwhAmount, 10);
@@ -116,29 +120,14 @@ export default function DashboardLayout({ user }: { user: User }) {
       return;
     }
 
-    const chargeTimeMinutes = Math.round((kwh / CHARGER_POWER_KW) * 60);
-
-     setChargers(prevChargers => prevChargers.map(c => {
-      if (c.id === selectedCharger.id) {
-        toast({
-          title: "Direct Charging Started!",
-          description: `Charging ${kwh} kWh. This will take about ${chargeTimeMinutes} minutes.`,
-        });
-        const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
-        return {
-          ...c,
-          status: 'Occupied',
-          currentUser: user,
-          currentVehicle: { model: 'Direct kWh Charge' },
-          kwhReserved: kwh,
-          startTime: new Date(),
-          estimatedEndTime: chargeEndTime,
-        };
-      }
-      return c;
-    }));
+    const cost = parseFloat((kwh * PRICE_PER_KWH).toFixed(2));
     
-    closeAndResetModal();
+    initiatePayment({
+        charger: selectedCharger,
+        type: 'direct',
+        kwh,
+        cost
+    });
   }
 
   const handleBooking = () => {
@@ -153,8 +142,6 @@ export default function DashboardLayout({ user }: { user: User }) {
     });
     
     // In a real app, you would save this booking to a backend and update the charger's availability.
-    // For this demo, we'll just show the toast.
-    
     closeAndResetModal();
   }
 
@@ -168,26 +155,22 @@ export default function DashboardLayout({ user }: { user: User }) {
     setBookingTime('');
   }
 
-
-  // Simulate charge completion and payment
+  // Effect to check for charge completions (unchanged)
   useEffect(() => {
     const interval = setInterval(() => {
       setChargers(prev => {
         const newChargers = [...prev];
         newChargers.forEach((charger, index) => {
           if (charger.status === 'Occupied' && charger.estimatedEndTime && new Date() > charger.estimatedEndTime) {
-            // Charging finished
-            const cost = (charger.kwhReserved || 0) * PRICE_PER_KWH; 
-            if (charger.currentUser?.id === user.id) {
-              setPaymentDetails({ amount: cost, chargerName: charger.name });
-              setPaymentModalOpen(true);
-            }
+            toast({
+              title: 'Charging Complete!',
+              description: `Your session at ${charger.name} has finished.`
+            });
 
             // Reset charger or move to next in queue
             const nextInQueue = charger.queue.length > 0 ? charger.queue[0] : null;
             if (nextInQueue) {
-              // A simple representation of the next user's charge
-              const nextKwh = 30; // Assume next user wants 30kWh
+              const nextKwh = 30; 
               const nextChargeTime = Math.round((nextKwh / CHARGER_POWER_KW) * 60);
 
               newChargers[index] = {
@@ -217,38 +200,23 @@ export default function DashboardLayout({ user }: { user: User }) {
         });
         return newChargers;
       });
-    }, 5000); // Check every 5 seconds
+    }, 5000); 
 
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
   
   const handlePayment = async () => {
-    if (!paymentDetails || paymentDetails.amount <= 0) {
-       toast({
-        variant: 'destructive',
-        title: 'Payment Error',
-        description: 'Invalid payment amount.',
-      });
-      // Also close the payment modal and generate a free ticket if charge was 0
-      setPaymentModalOpen(false);
-      generateQrTicket(true); // isFree = true
-      return;
-    };
+    if (!pendingCharge) return;
 
     try {
       const response = await fetch('/api/create-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount: paymentDetails.amount * 100 }), // Amount in paise
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: pendingCharge.cost * 100 }), // Amount in paise
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to create Razorpay order');
-      }
-
+      if (!response.ok) throw new Error('Failed to create Razorpay order');
       const order = await response.json();
 
       const options = {
@@ -256,22 +224,34 @@ export default function DashboardLayout({ user }: { user: User }) {
         amount: order.amount,
         currency: order.currency,
         name: 'ChargeSmart',
-        description: `Payment for charging at ${paymentDetails.chargerName}`,
+        description: `Payment for charging at ${pendingCharge.charger.name}`,
         order_id: order.id,
         handler: async (response: any) => {
+          // PAYMENT SUCCESSFUL
+          setPaymentModalOpen(false);
           toast({
             title: "Payment Successful!",
-            description: `Thank you for charging with ChargeSmart. Your payment ID is ${response.razorpay_payment_id}.`,
+            description: `Your transaction is complete. Starting your charge now.`,
           });
-          generateQrTicket();
+          
+          // Now, actually start the charge
+          startChargingSession(pendingCharge);
+          
+          // And generate the ticket
+          generateQrTicket(pendingCharge, response.razorpay_payment_id);
         },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
-        theme: {
-          color: '#5B21B6',
-        },
+        prefill: { name: user.name, email: user.email },
+        theme: { color: '#5B21B6' },
+        modal: {
+          ondismiss: () => {
+            toast({
+                variant: 'destructive',
+                title: 'Payment Cancelled',
+                description: 'Your payment was not completed.',
+            });
+            setPendingCharge(null);
+          }
+        }
       };
 
       const rzp = new window.Razorpay(options);
@@ -287,16 +267,37 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
   }
 
-  const generateQrTicket = async (isFree = false) => {
-    if (!paymentDetails) return;
-     // Generate QR Code
+  const startChargingSession = (chargeDetails: PendingCharge) => {
+      const chargeTimeMinutes = Math.round((chargeDetails.kwh / CHARGER_POWER_KW) * 60);
+      const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
+
+      setChargers(prevChargers => prevChargers.map(c => {
+        if (c.id === chargeDetails.charger.id) {
+          return {
+            ...c,
+            status: 'Occupied',
+            currentUser: user,
+            currentVehicle: chargeDetails.type === 'smart' 
+                ? { model: chargeDetails.evModel!, batteryPercentage: chargeDetails.batteryPercentage! }
+                : { model: 'Direct kWh Charge' },
+            kwhReserved: chargeDetails.kwh,
+            startTime: new Date(),
+            estimatedEndTime: chargeEndTime,
+          };
+        }
+        return c;
+      }));
+  }
+
+  const generateQrTicket = async (chargeDetails: PendingCharge, transactionId: string) => {
     const ticketData = {
-      charger: paymentDetails.chargerName,
+      charger: chargeDetails.charger.name,
       user: user.name,
       email: user.email,
-      amount: isFree ? '0.00' : paymentDetails.amount.toFixed(2),
+      kwh: chargeDetails.kwh,
+      amount: chargeDetails.cost.toFixed(2),
       date: format(new Date(), "PPpp"),
-      transactionId: `CS-${Date.now()}`
+      transactionId,
     };
 
     try {
@@ -305,10 +306,7 @@ export default function DashboardLayout({ user }: { user: User }) {
         type: 'image/jpeg',
         quality: 0.9,
         margin: 1,
-        color: {
-          dark:"#29003D",
-          light:"#FFFFFF"
-        }
+        color: { dark:"#29003D", light:"#FFFFFF" }
       });
       setQrCodeData(qrDataUrl);
       setQrModalOpen(true);
@@ -320,9 +318,7 @@ export default function DashboardLayout({ user }: { user: User }) {
         description: "Could not generate your ticket. Please contact support."
       })
     }
-
-    setPaymentModalOpen(false);
-    setPaymentDetails(null);
+    setPendingCharge(null);
   }
   
   const timeSlots = Array.from({ length: 24 * 2 }, (_, i) => {
@@ -393,7 +389,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                    <Button onClick={handleSmartCharge} disabled={!selectedEvModel || !batteryPercentage}>Confirm & Charge</Button>
+                    <Button onClick={handleSmartChargeRequest} disabled={!selectedEvModel || !batteryPercentage}>Proceed to Payment</Button>
                 </DialogFooter>
             </TabsContent>
             {/* Direct Charge: Based on kWh */}
@@ -408,7 +404,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 </div>
                  <DialogFooter>
                     <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                    <Button onClick={handleDirectCharge} disabled={!kwhAmount}>Start Direct Charge</Button>
+                    <Button onClick={handleDirectChargeRequest} disabled={!kwhAmount}>Proceed to Payment</Button>
                 </DialogFooter>
             </TabsContent>
             {/* Advance Booking */}
@@ -447,15 +443,15 @@ export default function DashboardLayout({ user }: { user: User }) {
       </Dialog>
 
       {/* Payment Modal */}
-      <Dialog open={isPaymentModalOpen} onOpenChange={setPaymentModalOpen}>
+      <Dialog open={isPaymentModalOpen} onOpenChange={(isOpen) => { if (!isOpen) setPendingCharge(null); setPaymentModalOpen(isOpen); }}>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle className="font-headline text-2xl">Payment Required</DialogTitle>
-                <DialogDescription>Your charging session at {paymentDetails?.chargerName} is complete.</DialogDescription>
+                <DialogDescription>Please complete the payment to start your charging session at {pendingCharge?.charger.name}.</DialogDescription>
             </DialogHeader>
             <div className="py-4 text-center">
                 <p className="text-muted-foreground">Total Amount</p>
-                <p className="text-5xl font-bold font-headline text-primary">₹{paymentDetails?.amount.toFixed(2)}</p>
+                <p className="text-5xl font-bold font-headline text-primary">₹{pendingCharge?.cost.toFixed(2)}</p>
             </div>
             <DialogFooter>
                 <Button className="w-full" onClick={handlePayment}>Pay with Razorpay</Button>
@@ -468,7 +464,7 @@ export default function DashboardLayout({ user }: { user: User }) {
           <DialogContent>
               <DialogHeader>
                   <DialogTitle className="font-headline text-2xl flex items-center gap-2"><Ticket className="h-6 w-6 text-primary"/> Your Charging Ticket</DialogTitle>
-                  <DialogDescription>Scan this QR code or keep it for your records.</DialogDescription>
+                  <DialogDescription>Scan this QR code at the station to begin charging.</DialogDescription>
               </DialogHeader>
               <div className="py-4 flex items-center justify-center">
                   {qrCodeData && (
@@ -485,4 +481,3 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
-
