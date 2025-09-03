@@ -27,6 +27,9 @@ declare global {
     }
 }
 
+const PRICE_PER_KWH = 18; // Rupees per kWh
+const CHARGER_POWER_KW = 22; // kW
+
 export default function DashboardLayout({ user }: { user: User }) {
   const [chargers, setChargers] = useState<Charger[]>(initialChargers);
   const [evs] = useState<EV[]>(initialEvs);
@@ -71,9 +74,15 @@ export default function DashboardLayout({ user }: { user: User }) {
   const handleSmartCharge = () => {
     if (!selectedCharger || !selectedEvModel || !batteryPercentage) return;
     
-    // Mock calculation for demo
-    const kwhNeeded = (100 - parseInt(batteryPercentage)) * 0.3; // Assuming 30kWh battery
-    const chargeTimeMinutes = Math.round((kwhNeeded / 22) * 60); // Assuming 22kW charger speed
+    const selectedEVObject = evs.find(ev => ev.model === selectedEvModel);
+    if (!selectedEVObject) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Selected EV model not found.'});
+      return;
+    }
+
+    const currentBattery = parseInt(batteryPercentage, 10);
+    const kwhNeeded = ((100 - currentBattery) / 100) * selectedEVObject.batteryCapacity;
+    const chargeTimeMinutes = Math.round((kwhNeeded / CHARGER_POWER_KW) * 60);
 
     setChargers(prevChargers => prevChargers.map(c => {
       if (c.id === selectedCharger.id) {
@@ -102,7 +111,12 @@ export default function DashboardLayout({ user }: { user: User }) {
     if (!selectedCharger || !kwhAmount) return;
     
     const kwh = parseInt(kwhAmount, 10);
-    const chargeTimeMinutes = Math.round((kwh / 22) * 60);
+    if (isNaN(kwh) || kwh <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid kWh amount.'});
+      return;
+    }
+
+    const chargeTimeMinutes = Math.round((kwh / CHARGER_POWER_KW) * 60);
 
      setChargers(prevChargers => prevChargers.map(c => {
       if (c.id === selectedCharger.id) {
@@ -115,7 +129,7 @@ export default function DashboardLayout({ user }: { user: User }) {
           ...c,
           status: 'Occupied',
           currentUser: user,
-          currentVehicle: { model: 'Unknown Vehicle' },
+          currentVehicle: { model: 'Direct kWh Charge' },
           kwhReserved: kwh,
           startTime: new Date(),
           estimatedEndTime: chargeEndTime,
@@ -132,14 +146,13 @@ export default function DashboardLayout({ user }: { user: User }) {
 
     const [hours, minutes] = bookingTime.split(':').map(Number);
     const bookingStart = set(bookingDate, { hours, minutes });
-    const bookingEnd = add(bookingStart, { hours: 1 }); // 1-hour slots
-
+    
     toast({
         title: "Slot Booked!",
         description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}.`,
     });
     
-    // Here you would typically add the booking to the charger's schedule.
+    // In a real app, you would save this booking to a backend and update the charger's availability.
     // For this demo, we'll just show the toast.
     
     closeAndResetModal();
@@ -164,7 +177,7 @@ export default function DashboardLayout({ user }: { user: User }) {
         newChargers.forEach((charger, index) => {
           if (charger.status === 'Occupied' && charger.estimatedEndTime && new Date() > charger.estimatedEndTime) {
             // Charging finished
-            const cost = (charger.kwhReserved || 50) * 15; // price per kwh
+            const cost = (charger.kwhReserved || 0) * PRICE_PER_KWH; 
             if (charger.currentUser?.id === user.id) {
               setPaymentDetails({ amount: cost, chargerName: charger.name });
               setPaymentModalOpen(true);
@@ -173,17 +186,20 @@ export default function DashboardLayout({ user }: { user: User }) {
             // Reset charger or move to next in queue
             const nextInQueue = charger.queue.length > 0 ? charger.queue[0] : null;
             if (nextInQueue) {
+              // A simple representation of the next user's charge
+              const nextKwh = 30; // Assume next user wants 30kWh
+              const nextChargeTime = Math.round((nextKwh / CHARGER_POWER_KW) * 60);
+
               newChargers[index] = {
                 ...initialChargers.find(ic => ic.id === charger.id)!,
                 id: charger.id,
                 name: charger.name,
                 status: 'Occupied',
                 currentUser: nextInQueue.user,
-                // simplified for demo
                 currentVehicle: { model: 'Tata Nexon EV', batteryPercentage: 20 },
-                kwhReserved: 50,
+                kwhReserved: nextKwh,
                 startTime: new Date(),
-                estimatedEndTime: new Date(new Date().getTime() + 30 * 60000),
+                estimatedEndTime: new Date(new Date().getTime() + nextChargeTime * 60000),
                 queue: charger.queue.slice(1),
               };
                toast({
@@ -204,10 +220,21 @@ export default function DashboardLayout({ user }: { user: User }) {
     }, 5000); // Check every 5 seconds
 
     return () => clearInterval(interval);
-  }, [toast, user.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
   
   const handlePayment = async () => {
-    if (!paymentDetails) return;
+    if (!paymentDetails || paymentDetails.amount <= 0) {
+       toast({
+        variant: 'destructive',
+        title: 'Payment Error',
+        description: 'Invalid payment amount.',
+      });
+      // Also close the payment modal and generate a free ticket if charge was 0
+      setPaymentModalOpen(false);
+      generateQrTicket(true); // isFree = true
+      return;
+    };
 
     try {
       const response = await fetch('/api/create-order', {
@@ -260,14 +287,14 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
   }
 
-  const generateQrTicket = async () => {
+  const generateQrTicket = async (isFree = false) => {
     if (!paymentDetails) return;
      // Generate QR Code
     const ticketData = {
       charger: paymentDetails.chargerName,
       user: user.name,
       email: user.email,
-      amount: paymentDetails.amount.toFixed(2),
+      amount: isFree ? '0.00' : paymentDetails.amount.toFixed(2),
       date: format(new Date(), "PPpp"),
       transactionId: `CS-${Date.now()}`
     };
@@ -334,7 +361,7 @@ export default function DashboardLayout({ user }: { user: User }) {
       <Chatbot />
       
       {/* Charging Options Modal */}
-      <Dialog open={isChargeModalOpen} onOpenChange={setChargeModalOpen}>
+      <Dialog open={isChargeModalOpen} onOpenChange={closeAndResetModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-headline text-2xl">Charge at {selectedCharger?.name}</DialogTitle>
@@ -372,11 +399,12 @@ export default function DashboardLayout({ user }: { user: User }) {
             {/* Direct Charge: Based on kWh */}
             <TabsContent value="direct">
                 <div className="space-y-4 py-4">
-                     <p className="text-sm text-muted-foreground">Specify the exact amount of electricity you need.</p>
+                     <p className="text-sm text-muted-foreground">Specify the exact amount of electricity you need (₹{PRICE_PER_KWH}/kWh).</p>
                     <div className="space-y-2">
                         <Label>kWh to Charge</Label>
                         <Input type="number" min="1" max="100" value={kwhAmount} onChange={e => setKwhAmount(e.target.value)} placeholder="e.g., 25" required/>
                     </div>
+                    {kwhAmount && <p className="text-center font-bold text-lg">Total Cost: ₹{(parseInt(kwhAmount, 10) * PRICE_PER_KWH).toFixed(2)}</p>}
                 </div>
                  <DialogFooter>
                     <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
@@ -457,3 +485,4 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
+
