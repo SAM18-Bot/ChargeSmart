@@ -39,7 +39,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleSubmitting, setGoogleSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,7 +65,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setGoogleSubmitting(true);
+    setIsSubmitting(true);
     try {
       await signInWithGoogle();
       router.push('/');
@@ -77,7 +76,7 @@ export default function LoginPage() {
             description: error.message || 'Could not sign you in with Google. Please try again.',
         });
     } finally {
-        setGoogleSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
@@ -112,7 +111,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting || isGoogleSubmitting}
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -123,10 +122,10 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting || isGoogleSubmitting}
+                disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="w-full font-bold" disabled={isSubmitting || isGoogleSubmitting}>
+            <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
@@ -143,8 +142,8 @@ export default function LoginPage() {
             </div>
           </div>
           
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting || isGoogleSubmitting}>
-             {isGoogleSubmitting ? (
+          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+             {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
              ) : (
                 <GoogleIcon />
