@@ -28,14 +28,15 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
       <Link href="/" className="flex items-center gap-2">
         <Logo />
-        <span className="text-xl font-bold font-headline tracking-tighter">ChargeSmart</span>
+        <span className="text-xl font-bold font-headline tracking-tighter text-primary">ChargeSmart</span>
       </Link>
       <div className="ml-auto flex items-center gap-4">
         {assistantDialog}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 border-2 border-primary/50">
+                <AvatarImage src={user.photoURL} alt={user.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground">{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
             </Button>
