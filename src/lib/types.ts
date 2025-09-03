@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   photoURL?: string;
+  phoneNumber?: string;
 }
 
 export interface EV {

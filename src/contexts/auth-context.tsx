@@ -12,7 +12,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  User as FirebaseUser
+  User as FirebaseUser,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult
 } from 'firebase/auth';
 import { Zap } from 'lucide-react';
 
@@ -22,25 +25,46 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  signInWithPhoneNumber: (phoneNumber: string) => Promise<void>;
+  verifyOtp: (otp: string) => Promise<void>;
   logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper to set up reCAPTCHA verifier
+const setupRecaptcha = () => {
+  if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible',
+        'callback': (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        }
+      });
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  
+  useEffect(() => {
+    setupRecaptcha();
+  }, [])
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const appUser: AppUser = {
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User',
+          name: firebaseUser.displayName || firebaseUser.phoneNumber || 'User',
           email: firebaseUser.email || 'No Email',
           photoURL: firebaseUser.photoURL || undefined,
+          phoneNumber: firebaseUser.phoneNumber || undefined,
         };
         setUser(appUser);
       } else {
@@ -75,12 +99,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithEmailAndPassword(auth, email, pass);
   }
 
+  const signInWithPhoneNumber = async (phoneNumber: string) => {
+    if (window.recaptchaVerifier) {
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+      setConfirmationResult(confirmation);
+    } else {
+      throw new Error("reCAPTCHA not initialized.");
+    }
+  }
+
+  const verifyOtp = async (otp: string) => {
+    if (confirmationResult) {
+      await confirmationResult.confirm(otp);
+    } else {
+      throw new Error("No OTP confirmation result found.");
+    }
+  }
+
   const logout = async () => {
     await signOut(auth);
     router.push('/login');
   };
 
-  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, logout };
+  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, signInWithPhoneNumber, verifyOtp, logout };
 
   if (loading && !['/login', '/register'].includes(pathname)) {
       return (
@@ -96,3 +137,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+  }
+}

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const GoogleIcon = () => (
     <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -36,10 +37,13 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signInWithEmail, signInWithGoogle, user, loading } = useAuth();
+  const { signInWithEmail, signInWithGoogle, signInWithPhoneNumber, verifyOtp, user, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,6 +85,44 @@ export default function LoginPage() {
     }
   };
 
+  const handlePhoneSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await signInWithPhoneNumber(phone);
+      setOtpSent(true);
+      toast({
+        title: 'OTP Sent',
+        description: 'Please check your phone for the verification code.',
+      });
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Failed to send OTP',
+        description: error.message || 'Please check the phone number and try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await verifyOtp(otp);
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid OTP',
+        description: error.message || 'The OTP you entered is incorrect. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   if (loading || user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
@@ -102,35 +144,84 @@ export default function LoginPage() {
           <CardDescription>Sign in to access your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
-              {isSubmitting && !!email && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-          </form>
+          <Tabs defaultValue="email" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email">Email</TabsTrigger>
+              <TabsTrigger value="phone">Phone</TabsTrigger>
+            </TabsList>
+            <TabsContent value="email">
+               <form onSubmit={handleEmailLogin} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                  {isSubmitting && !!email && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sign In
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="phone">
+               {!otpSent ? (
+                <form onSubmit={handlePhoneSignIn} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send OTP
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleOtpVerify} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Enter OTP</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      placeholder="123456"
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                   <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Verify OTP & Sign In
+                  </Button>
+                </form>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -142,9 +233,11 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
+          
+          <div id="recaptcha-container"></div>
 
           <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-             {isSubmitting && !email ? (
+             {isSubmitting && !email && !phone ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
              ) : (
                 <GoogleIcon />
