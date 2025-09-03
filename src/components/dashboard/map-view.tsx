@@ -17,6 +17,8 @@ export function MapView({ chargers }: MapViewProps) {
     { top: '45%', left: '55%' },
     { top: '60%', left: '20%' },
     { top: '75%', left: '70%' },
+    { top: '35%', left: '80%' },
+    { top: '50%', left: '10%' },
   ];
 
   return (

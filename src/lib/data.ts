@@ -3,13 +3,13 @@ import { Charger, EV } from './types';
 export const chargers: Charger[] = [
   {
     id: 'CZ-001',
-    name: 'Zenith Charger 1',
+    name: 'Koregaon Park Charger',
     status: 'Available',
     queue: [],
   },
   {
     id: 'CZ-002',
-    name: 'Apex Charger 2',
+    name: 'Hinjewadi IT Park Charger',
     status: 'Occupied',
     currentUser: { id: '2', name: 'Alice' },
     currentVehicle: { model: 'Tesla Model 3', batteryPercentage: 45 },
@@ -22,18 +22,35 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-003',
-    name: 'Pulse Charger 3',
+    name: 'Viman Nagar Charger',
     status: 'Available',
     queue: [],
   },
   {
     id: 'CZ-004',
-    name: 'Volt Charger 4',
+    name: 'Baner Charger',
     status: 'Available',
     queue: [
        { user: { id: '4', name: 'Charlie' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
        { user: { id: '5', name: 'Diana' }, joinTime: new Date(new Date().getTime() - 2 * 60000) },
     ],
+  },
+  {
+    id: 'CZ-005',
+    name: 'Kalyani Nagar Charger',
+    status: 'Available',
+    queue: [],
+  },
+  {
+    id: 'CZ-006',
+    name: 'Hadapsar Charger',
+    status: 'Occupied',
+    currentUser: { id: '6', name: 'Frank' },
+    currentVehicle: { model: 'Hyundai Kona Electric', batteryPercentage: 60 },
+    kwhReserved: 25,
+    startTime: new Date(new Date().getTime() - 20 * 60000),
+    estimatedEndTime: new Date(new Date().getTime() + 25 * 60000),
+    queue: [],
   },
 ];
 

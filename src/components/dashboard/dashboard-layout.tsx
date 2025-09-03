@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/dashboard/header';
 import ChargerCard from '@/components/dashboard/charger-card';
 import { MapView } from '@/components/dashboard/map-view';
-import Chatbot from '@/components/chatbot/chatbot';
 import { chargers as initialChargers, evs as initialEvs } from '@/lib/data';
 import type { Charger, EV, User, QueueItem } from '@/lib/types';
 import { AiAssistantDialog } from './ai-assistant-dialog';
@@ -158,7 +157,6 @@ export default function DashboardLayout({ user }: { user: User }) {
           </div>
         </div>
       </main>
-      <Chatbot />
       
       {/* Start Charging Modal */}
       <Dialog open={isChargeModalOpen} onOpenChange={setChargeModalOpen}>
