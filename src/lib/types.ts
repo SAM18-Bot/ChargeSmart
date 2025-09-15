@@ -42,4 +42,5 @@ export interface Charger {
   estimatedEndTime?: Date;
   queue: QueueItem[];
   bookings?: Booking[];
+  distance?: number;
 }
