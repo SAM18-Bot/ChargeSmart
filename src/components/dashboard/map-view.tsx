@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Charger } from '@/lib/types';
-import { Users, Navigation, Loader2 } from 'lucide-react';
+import { Users, Navigation, Loader2, Crosshair } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MapViewProps {
   chargers: Charger[];
@@ -158,6 +159,8 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export function MapView({ chargers }: MapViewProps) {
   const [center, setCenter] = useState(defaultCenter);
+  const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -165,23 +168,33 @@ export function MapView({ chargers }: MapViewProps) {
     preventGoogleFontsLoading: true,
   });
 
-  const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
-
-  useEffect(() => {
+  const handleLocateMe = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCenter({
+          const newCenter = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          });
+          };
+          setCenter(newCenter);
+          if (mapRef.current) {
+            mapRef.current.panTo(newCenter);
+          }
         },
         () => {
-          // User denied location, fallback to default
-          setCenter(defaultCenter);
+          // Handle error or user denial
+          alert("Could not get your location. Please enable location services in your browser.");
         }
       );
+    } else {
+        alert("Geolocation is not supported by this browser.");
     }
+  };
+
+  useEffect(() => {
+    // We still try to locate on initial load for a better user experience
+    handleLocateMe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMarkerClick = (charger: Charger) => {
@@ -193,6 +206,14 @@ export function MapView({ chargers }: MapViewProps) {
     window.open(url, '_blank');
   };
 
+  const onLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
+  };
+
+  const onUnmount = () => {
+    mapRef.current = null;
+  };
+
   if (loadError) {
     return <Card><CardContent className="p-4"><p className='text-destructive'>Error loading maps. Please check the API key.</p></CardContent></Card>;
   }
@@ -202,58 +223,80 @@ export function MapView({ chargers }: MapViewProps) {
   }
 
   return (
-    <Card className="overflow-hidden shadow-lg aspect-square">
+    <Card className="overflow-hidden shadow-lg aspect-square relative">
       <CardContent className="p-0 h-full w-full">
         {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={12}
-            options={mapOptions}
-          >
-            {chargers.map(charger => (
-              <MarkerF
-                key={charger.id}
-                position={{ lat: charger.lat, lng: charger.lng }}
-                onClick={() => handleMarkerClick(charger)}
-                icon={{
-                  path: 'M13 10V3L4 14h7v7l9-11h-7z',
-                  fillColor: charger.status === 'Available' ? '#4ade80' : '#facc15',
-                  fillOpacity: 1,
-                  strokeWeight: 1,
-                  strokeColor: '#000000',
-                  scale: 1.5,
-                  anchor: new window.google.maps.Point(12, 12),
-                }}
-              />
-            ))}
+          <>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                   <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="absolute top-3 right-3 z-10 bg-background/80 hover:bg-background"
+                    onClick={handleLocateMe}
+                    >
+                        <Crosshair className="h-5 w-5 text-foreground" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Locate stations near me</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={12}
+              options={mapOptions}
+              onLoad={onLoad}
+              onUnmount={onUnmount}
+            >
+              {chargers.map(charger => (
+                <MarkerF
+                  key={charger.id}
+                  position={{ lat: charger.lat, lng: charger.lng }}
+                  onClick={() => handleMarkerClick(charger)}
+                  icon={{
+                    path: 'M13 10V3L4 14h7v7l9-11h-7z',
+                    fillColor: charger.status === 'Available' ? '#4ade80' : '#facc15',
+                    fillOpacity: 1,
+                    strokeWeight: 1,
+                    strokeColor: '#000000',
+                    scale: 1.5,
+                    anchor: new window.google.maps.Point(12, 12),
+                  }}
+                />
+              ))}
 
-            {selectedCharger && (
-              <InfoWindowF
-                position={{ lat: selectedCharger.lat, lng: selectedCharger.lng }}
-                onCloseClick={() => setSelectedCharger(null)}
-                options={{
-                    pixelOffset: new window.google.maps.Size(0, -30)
-                }}
-              >
-                <div className="p-2 font-body max-w-xs">
-                  <h3 className="font-bold font-headline text-lg mb-2">{selectedCharger.name}</h3>
-                  <div className='flex justify-between items-center mb-3'>
-                    <Badge variant={selectedCharger.status === 'Available' ? 'default' : 'destructive'} className={selectedCharger.status === 'Available' ? 'bg-green-500' : 'bg-yellow-500'}>
-                        {selectedCharger.status}
-                    </Badge>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                        <Users className="mr-1 h-4 w-4" /> {selectedCharger.queue.length} in queue
+              {selectedCharger && (
+                <InfoWindowF
+                  position={{ lat: selectedCharger.lat, lng: selectedCharger.lng }}
+                  onCloseClick={() => setSelectedCharger(null)}
+                  options={{
+                      pixelOffset: new window.google.maps.Size(0, -30)
+                  }}
+                >
+                  <div className="p-2 font-body max-w-xs">
+                    <h3 className="font-bold font-headline text-lg mb-2">{selectedCharger.name}</h3>
+                    <div className='flex justify-between items-center mb-3'>
+                      <Badge variant={selectedCharger.status === 'Available' ? 'default' : 'destructive'} className={selectedCharger.status === 'Available' ? 'bg-green-500' : 'bg-yellow-500'}>
+                          {selectedCharger.status}
+                      </Badge>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                          <Users className="mr-1 h-4 w-4" /> {selectedCharger.queue.length} in queue
+                      </div>
                     </div>
+                    <Button onClick={() => handleDirectionsClick(selectedCharger)} className="w-full">
+                      <Navigation className="mr-2 h-4 w-4" />
+                      Get Directions
+                    </Button>
                   </div>
-                  <Button onClick={() => handleDirectionsClick(selectedCharger)} className="w-full">
-                    <Navigation className="mr-2 h-4 w-4" />
-                    Get Directions
-                  </Button>
-                </div>
-              </InfoWindowF>
-            )}
-          </GoogleMap>
+                </InfoWindowF>
+              )}
+            </GoogleMap>
+          </>
         ) : (
           <div className="flex items-center justify-center h-full w-full bg-muted">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
