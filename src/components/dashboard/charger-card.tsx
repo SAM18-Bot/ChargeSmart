@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Charger, QueueItem, User } from '@/lib/types';
-import { Zap, Clock, Users, Loader2, BatteryCharging, Hourglass } from 'lucide-react';
+import { Charger, User } from '@/lib/types';
+import { Zap, Users, Loader2, BatteryCharging, Hourglass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { estimateTimeTillEmpty } from '@/ai/flows/estimate-time-till-empty';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -138,10 +138,12 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
           ) : (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild className="w-full">
-                  <Button variant="outline" className="w-full" onClick={() => onJoinQueue(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
-                    Join Queue
-                  </Button>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <Button variant="outline" className="w-full" onClick={() => onJoinQueue(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
+                      Join Queue
+                    </Button>
+                  </div>
                 </TooltipTrigger>
                 {(isCurrentUserCharging || isCurrentUserInQueue) && 
                   <TooltipContent>

@@ -464,7 +464,7 @@ export default function DashboardLayout({ user }: { user: User }) {
           <DialogContent>
               <DialogHeader>
                   <DialogTitle className="font-headline text-2xl flex items-center gap-2"><Ticket className="h-6 w-6 text-primary"/> Your Charging Ticket</DialogTitle>
-                  <DialogDescription>Scan this QR code at the station to begin charging.</DialogDescription>
+                  <DialogDescription>Show this QR code at the station to validate your session. A copy has been sent to your email.</DialogDescription>
               </DialogHeader>
               <div className="py-4 flex items-center justify-center">
                   {qrCodeData && (

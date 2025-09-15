@@ -165,7 +165,6 @@ export function MapView({ chargers }: MapViewProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: API_KEY,
-    preventGoogleFontsLoading: true,
   });
 
   const handleLocateMe = () => {
@@ -179,6 +178,7 @@ export function MapView({ chargers }: MapViewProps) {
           setCenter(newCenter);
           if (mapRef.current) {
             mapRef.current.panTo(newCenter);
+            mapRef.current.setZoom(14);
           }
         },
         () => {
@@ -199,6 +199,9 @@ export function MapView({ chargers }: MapViewProps) {
 
   const handleMarkerClick = (charger: Charger) => {
     setSelectedCharger(charger);
+    if(mapRef.current) {
+        mapRef.current.panTo({ lat: charger.lat, lng: charger.lng });
+    }
   };
 
   const handleDirectionsClick = (charger: Charger) => {
@@ -281,7 +284,7 @@ export function MapView({ chargers }: MapViewProps) {
                   <div className="p-2 font-body max-w-xs">
                     <h3 className="font-bold font-headline text-lg mb-2">{selectedCharger.name}</h3>
                     <div className='flex justify-between items-center mb-3'>
-                      <Badge variant={selectedCharger.status === 'Available' ? 'default' : 'destructive'} className={selectedCharger.status === 'Available' ? 'bg-green-500' : 'bg-yellow-500'}>
+                      <Badge className={selectedCharger.status === 'Available' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-black'}>
                           {selectedCharger.status}
                       </Badge>
                       <div className="flex items-center text-sm text-muted-foreground">
