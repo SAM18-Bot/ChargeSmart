@@ -26,6 +26,8 @@ import { Slider } from '../ui/slider';
 declare global {
     interface Window {
         Razorpay: any;
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
     }
 }
 
@@ -113,33 +115,6 @@ export default function DashboardLayout({ user }: { user: User }) {
        setNearestChargers(chargers.slice(0,4));
     }
   }, [userLocation, chargers]);
-
-  // Simulate real-time updates
-  useEffect(() => {
-    const simulationInterval = setInterval(() => {
-        setChargers(prevChargers => {
-            return prevChargers.map(charger => {
-                // 10% chance to change status
-                if (Math.random() < 0.1) {
-                    if (charger.status === 'Available') {
-                        return { ...charger, status: 'Occupied', queue: Math.random() > 0.5 ? charger.queue : [] };
-                    } else {
-                        return { ...charger, status: 'Available' };
-                    }
-                }
-                // 5% chance to add to queue if occupied
-                if (charger.status === 'Occupied' && Math.random() < 0.05 && charger.queue.length < 4) {
-                     const newUser: User = { id: `u${Date.now()}`, name: 'New User', email: '' };
-                     return { ...charger, queue: [...charger.queue, { user: newUser, joinTime: new Date() }]};
-                }
-                return charger;
-            });
-        });
-    }, 15000); // every 15 seconds
-
-    return () => clearInterval(simulationInterval);
-  }, []);
-
 
   const handleOpenChargeModal = (chargerId: string) => {
     const charger = chargers.find(c => c.id === chargerId);
@@ -596,5 +571,3 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
-
-    
