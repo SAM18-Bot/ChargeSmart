@@ -1,9 +1,10 @@
 import { Charger, EV } from './types';
 
 export const chargers: Charger[] = [
+  // Pune
   {
     id: 'CZ-001',
-    name: 'Koregaon Park Plaza',
+    name: 'Koregaon Park Plaza, Pune',
     status: 'Available',
     lat: 18.5362,
     lng: 73.9079,
@@ -11,7 +12,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-002',
-    name: 'Phoenix Marketcity',
+    name: 'Phoenix Marketcity, Pune',
     status: 'Occupied',
     lat: 18.5621,
     lng: 73.9167,
@@ -26,7 +27,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-003',
-    name: 'Westend Mall',
+    name: 'Westend Mall, Pune',
     status: 'Available',
     lat: 18.5084,
     lng: 73.8098,
@@ -34,7 +35,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-004',
-    name: 'Amanora Mall',
+    name: 'Amanora Mall, Pune',
     status: 'Occupied',
     lat: 18.5244,
     lng: 73.9357,
@@ -47,9 +48,97 @@ export const chargers: Charger[] = [
        { user: { id: '5', name: 'Anjali' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
     ],
   },
+  // Mumbai
+  {
+    id: 'CZ-M01',
+    name: 'Palladium Mall, Mumbai',
+    status: 'Available',
+    lat: 19.0042,
+    lng: 72.8255,
+    queue: [],
+  },
+  {
+    id: 'CZ-M02',
+    name: 'Jio World Drive, Mumbai',
+    status: 'Occupied',
+    lat: 19.0669,
+    lng: 72.8621,
+    currentUser: { id: '7', name: 'Alia' },
+    currentVehicle: { model: 'Audi e-tron', batteryPercentage: 55 },
+    kwhReserved: 50,
+    startTime: new Date(new Date().getTime() - 25 * 60000),
+    estimatedEndTime: new Date(new Date().getTime() + 40 * 60000),
+    queue: [
+      { user: { id: '8', name: 'Varun' }, joinTime: new Date(new Date().getTime() - 12 * 60000) },
+    ],
+  },
+  // Delhi
+  {
+    id: 'CZ-D01',
+    name: 'Select Citywalk, Delhi',
+    status: 'Available',
+    lat: 28.5284,
+    lng: 77.2195,
+    queue: [],
+  },
+  {
+    id: 'CZ-D02',
+    name: 'DLF CyberHub, Gurugram',
+    status: 'Available',
+    lat: 28.4947,
+    lng: 77.0883,
+    queue: [],
+  },
+  // Bangalore
+  {
+    id: 'CZ-B01',
+    name: 'UB City, Bangalore',
+    status: 'Occupied',
+    lat: 12.9719,
+    lng: 77.5937,
+    currentUser: { id: '9', name: 'Deepika' },
+    currentVehicle: { model: 'Jaguar I-PACE', batteryPercentage: 20 },
+    kwhReserved: 70,
+    startTime: new Date(new Date().getTime() - 5 * 60000),
+    estimatedEndTime: new Date(new Date().getTime() + 60 * 60000),
+    queue: [],
+  },
+  {
+    id: 'CZ-B02',
+    name: 'Orion Mall, Bangalore',
+    status: 'Available',
+    lat: 13.0102,
+    lng: 77.5549,
+    queue: [],
+  },
+  // Chennai
+  {
+    id: 'CZ-C01',
+    name: 'Express Avenue, Chennai',
+    status: 'Available',
+    lat: 13.0604,
+    lng: 80.2635,
+    queue: [],
+  },
+  {
+    id: 'CZ-C02',
+    name: 'Phoenix Marketcity, Chennai',
+    status: 'Occupied',
+    lat: 12.9908,
+    lng: 80.2177,
+    currentUser: { id: '10', name: 'Suriya' },
+    currentVehicle: { model: 'BYD Atto 3', batteryPercentage: 70 },
+    kwhReserved: 15,
+    startTime: new Date(new Date().getTime() - 30 * 60000),
+    estimatedEndTime: new Date(new Date().getTime() + 10 * 60000),
+    queue: [
+      { user: { id: '11', name: 'Trisha' }, joinTime: new Date(new Date().getTime() - 15 * 60000) },
+      { user: { id: '12', name: 'Vijay' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
+    ],
+  },
   {
     id: 'CZ-005',
-    name: 'Seasons Mall',
+    name: 'Seasons Mall, Pune',
     status: 'Available',
     lat: 18.5258,
     lng: 73.9363,
@@ -57,7 +146,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-006',
-    name: 'Elpro City Square',
+    name: 'Elpro City Square, Pune',
     status: 'Occupied',
     lat: 18.6220,
     lng: 73.8143,
@@ -70,7 +159,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-007',
-    name: 'Kumar Pacific Mall',
+    name: 'Kumar Pacific Mall, Pune',
     status: 'Available',
     lat: 18.4988,
     lng: 73.8767,
@@ -78,7 +167,7 @@ export const chargers: Charger[] = [
   },
   {
     id: 'CZ-008',
-    name: 'SGS Magnum Mall',
+    name: 'SGS Magnum Mall, Pune',
     status: 'Available',
     lat: 18.5204,
     lng: 73.8567,
