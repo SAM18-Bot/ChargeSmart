@@ -21,6 +21,7 @@ import QRCode from 'qrcode';
 import Image from 'next/image';
 import { Loader2, Navigation, Ticket } from 'lucide-react';
 import { ChargingOptionsCard } from './charging-options-card';
+import { Slider } from '../ui/slider';
 
 declare global {
     interface Window {
@@ -68,7 +69,7 @@ export default function DashboardLayout({ user }: { user: User }) {
   
   const [selectedEvModel, setSelectedEvModel] = useState('');
   const [batteryPercentage, setBatteryPercentage] = useState('');
-  const [kwhAmount, setKwhAmount] = useState('');
+  const [kwhAmount, setKwhAmount] = useState('10');
   const [bookingDate, setBookingDate] = useState<Date | undefined>(new Date());
   const [bookingTime, setBookingTime] = useState<string>('');
   const [activeTab, setActiveTab] = useState('smart');
@@ -239,7 +240,7 @@ export default function DashboardLayout({ user }: { user: User }) {
     setSelectedCharger(null);
     setSelectedEvModel('');
     setBatteryPercentage('');
-    setKwhAmount('');
+    setKwhAmount('10');
     setBookingDate(new Date());
     setBookingTime('');
   }
@@ -361,6 +362,9 @@ export default function DashboardLayout({ user }: { user: User }) {
     const minutes = totalMinutes % 60;
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   });
+
+  const kwhValue = parseFloat(kwhAmount);
+  const calculatedCost = !isNaN(kwhValue) ? (kwhValue * PRICE_PER_KWH).toFixed(2) : '0.00';
 
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
@@ -486,15 +490,41 @@ export default function DashboardLayout({ user }: { user: User }) {
                 <TabsContent value="direct">
                     <div className="space-y-4 py-4">
                         <p className="text-sm text-muted-foreground">Specify the exact amount of electricity you need (₹{PRICE_PER_KWH}/kWh).</p>
-                        <div className="space-y-2">
-                            <Label>kWh to Charge</Label>
-                            <Input type="number" min="1" max="100" step="0.1" value={kwhAmount} onChange={e => setKwhAmount(e.target.value)} placeholder="e.g., 25.5" required/>
+                        
+                        <div className='flex items-center gap-4'>
+                             <Input 
+                                type="number" 
+                                min="0.5" 
+                                max="100" 
+                                step="0.1" 
+                                value={kwhAmount} 
+                                onChange={e => setKwhAmount(e.target.value)} 
+                                required
+                                className="w-24 text-center text-lg font-bold"
+                            />
+                            <Slider
+                                value={[isNaN(kwhValue) ? 0 : kwhValue]}
+                                onValueChange={(value) => setKwhAmount(String(value[0]))}
+                                max={50}
+                                min={0.5}
+                                step={0.5}
+                            />
                         </div>
-                        {kwhAmount && selectedCharger && !isNaN(parseFloat(kwhAmount)) && <p className="text-center font-bold text-lg">Total Cost: ₹{(parseFloat(kwhAmount) * PRICE_PER_KWH).toFixed(2)}</p>}
+                        <div className="flex justify-center gap-2">
+                            {[10, 20, 30].map(val => (
+                                <Button key={val} variant="outline" size="sm" onClick={() => setKwhAmount(String(val))}>
+                                    {val} kWh
+                                </Button>
+                            ))}
+                        </div>
+
+                        {kwhAmount && selectedCharger && !isNaN(kwhValue) && (
+                            <p className="text-center font-bold text-lg">Total Cost: ₹{calculatedCost}</p>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount || isNaN(parseFloat(kwhAmount))}>Proceed to Payment</Button>
+                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount || isNaN(kwhValue)}>Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
                 <TabsContent value="book">
@@ -571,3 +601,5 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
+
+    
