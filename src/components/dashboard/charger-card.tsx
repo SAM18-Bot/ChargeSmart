@@ -48,10 +48,6 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
   useEffect(() => {
     if (charger.status === 'Occupied') {
       fetchEstimate();
-      // Set up an interval to re-fetch the estimate every 30 seconds
-      const interval = setInterval(fetchEstimate, 30000); 
-      // Clear the interval when the component unmounts or dependencies change
-      return () => clearInterval(interval);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [charger.status, charger.id]);
