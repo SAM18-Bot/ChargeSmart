@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Chatbot from '../chatbot/chatbot';
+import Chatbot, { ChatbotAction } from '../chatbot/chatbot';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Calendar } from '../ui/calendar';
 import { add, format, set } from 'date-fns';
@@ -34,7 +34,7 @@ declare global {
 const PRICE_PER_KWH = 18; // Rupees per kWh
 const CHARGER_POWER_KW = 22; // kW
 
-interface PendingCharge {
+export interface PendingCharge {
     charger: Charger;
     type: 'smart' | 'direct';
     kwh: number;
@@ -325,6 +325,30 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
     setPendingCharge(null);
   }
+
+  const handleAssistantAction = (action: ChatbotAction) => {
+    switch (action.type) {
+        case 'INITIATE_PAYMENT':
+            if (action.payload) {
+                initiatePayment(action.payload as PendingCharge);
+            }
+            break;
+        case 'BOOK_SLOT_CONFIRMED':
+            if (action.payload) {
+                const { charger, date, time } = action.payload;
+                const [hours, minutes] = time.split(':').map(Number);
+                const bookingStart = set(new Date(date), { hours, minutes });
+                toast({
+                    title: "Voice Booking Confirmed!",
+                    description: `You have booked ${charger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}.`,
+                });
+            }
+            break;
+        case 'REQUIRE_MORE_INFO':
+            // The chatbot UI handles showing the message, no extra action needed here.
+            break;
+    }
+  };
   
   const timeSlots = Array.from({ length: 24 * 2 }, (_, i) => {
     const totalMinutes = i * 30;
@@ -397,7 +421,7 @@ export default function DashboardLayout({ user }: { user: User }) {
 
       </main>
       
-      <Chatbot />
+      <Chatbot onAction={handleAssistantAction} />
       
       {/* Charging Options Modal */}
       <Dialog open={isChargeModalOpen} onOpenChange={closeAndResetModal}>
@@ -571,3 +595,5 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
+
+    

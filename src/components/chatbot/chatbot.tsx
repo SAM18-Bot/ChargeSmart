@@ -20,7 +20,16 @@ interface Message {
   text: string;
 }
 
-export default function Chatbot() {
+export type ChatbotAction = {
+    type: 'INITIATE_PAYMENT' | 'BOOK_SLOT_CONFIRMED' | 'REQUIRE_MORE_INFO' | 'NONE';
+    payload?: any;
+}
+
+interface ChatbotProps {
+    onAction?: (action: ChatbotAction) => void;
+}
+
+export default function Chatbot({ onAction }: ChatbotProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,12 +84,20 @@ export default function Chatbot() {
             language,
             userName: user?.name || 'User' 
         });
+
         const botMessage: Message = { sender: 'bot', text: response.response };
         setMessages((prev) => [...prev, botMessage]);
         
+        // Let the parent component handle the action
+        if (response.action && response.action.type !== 'NONE' && onAction) {
+            onAction(response.action);
+        }
+
         // Convert response to speech
-        const audioResponse = await textToSpeech({ text: response.response });
-        playAudio(audioResponse.audio);
+        if (response.response) {
+            const audioResponse = await textToSpeech({ text: response.response });
+            playAudio(audioResponse.audio);
+        }
 
     } catch (error) {
         console.error('Error processing voice command:', error);
@@ -284,3 +301,5 @@ export default function Chatbot() {
     </>
   );
 }
+
+    
