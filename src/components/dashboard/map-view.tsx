@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Charger } from '@/lib/types';
-import { Zap, Users, Navigation, Loader2 } from 'lucide-react';
+import { Users, Navigation, Loader2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 
 interface MapViewProps {
@@ -19,7 +19,7 @@ const containerStyle = {
   borderRadius: '0.8rem'
 };
 
-const center = {
+const defaultCenter = {
   lat: 18.5204,
   lng: 73.8567
 };
@@ -154,13 +154,35 @@ const mapOptions = {
   ]
 };
 
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
 export function MapView({ chargers }: MapViewProps) {
+  const [center, setCenter] = useState(defaultCenter);
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+    googleMapsApiKey: API_KEY,
+    preventGoogleFontsLoading: true,
   });
 
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        () => {
+          // User denied location, fallback to default
+          setCenter(defaultCenter);
+        }
+      );
+    }
+  }, []);
 
   const handleMarkerClick = (charger: Charger) => {
     setSelectedCharger(charger);
@@ -173,6 +195,10 @@ export function MapView({ chargers }: MapViewProps) {
 
   if (loadError) {
     return <Card><CardContent className="p-4"><p className='text-destructive'>Error loading maps. Please check the API key.</p></CardContent></Card>;
+  }
+
+  if (!API_KEY) {
+    return <Card><CardContent className="p-4"><p className='text-destructive'>Google Maps API Key is missing.</p></CardContent></Card>;
   }
 
   return (
