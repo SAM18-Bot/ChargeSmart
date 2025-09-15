@@ -135,15 +135,10 @@ export default function DashboardLayout({ user }: { user: User }) {
                 return charger;
             });
         });
-
-         toast({
-            title: "Live Update",
-            description: "Charger statuses have been updated.",
-        });
     }, 15000); // every 15 seconds
 
     return () => clearInterval(simulationInterval);
-  }, [toast]);
+  }, []);
 
 
   const handleOpenChargeModal = (chargerId: string) => {
