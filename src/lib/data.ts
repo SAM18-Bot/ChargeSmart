@@ -15,13 +15,13 @@ export const chargers: Charger[] = [
     status: 'Occupied',
     lat: 18.5621,
     lng: 73.9167,
-    currentUser: { id: '2', name: 'Alice' },
+    currentUser: { id: '2', name: 'Priya' },
     currentVehicle: { model: 'Tesla Model 3', batteryPercentage: 45 },
     kwhReserved: 40,
     startTime: new Date(new Date().getTime() - 15 * 60000), // 15 mins ago
     estimatedEndTime: new Date(new Date().getTime() + 15 * 60000), // 15 mins from now
     queue: [
-      { user: { id: '3', name: 'Bob' }, joinTime: new Date(new Date().getTime() - 10 * 60000) },
+      { user: { id: '3', name: 'Rohan' }, joinTime: new Date(new Date().getTime() - 10 * 60000) },
     ],
   },
   {
@@ -38,13 +38,13 @@ export const chargers: Charger[] = [
     status: 'Occupied',
     lat: 18.5244,
     lng: 73.9357,
-    currentUser: { id: '4', name: 'Charlie' },
+    currentUser: { id: '4', name: 'Sameer' },
     currentVehicle: { model: 'MG ZS EV', batteryPercentage: 30 },
     kwhReserved: 35,
     startTime: new Date(new Date().getTime() - 10 * 60000),
     estimatedEndTime: new Date(new Date().getTime() + 35 * 60000),
     queue: [
-       { user: { id: '5', name: 'Diana' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
+       { user: { id: '5', name: 'Anjali' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
     ],
   },
   {
@@ -61,7 +61,7 @@ export const chargers: Charger[] = [
     status: 'Occupied',
     lat: 18.6220,
     lng: 73.8143,
-    currentUser: { id: '6', name: 'Frank' },
+    currentUser: { id: '6', name: 'Vikram' },
     currentVehicle: { model: 'Hyundai Kona Electric', batteryPercentage: 60 },
     kwhReserved: 25,
     startTime: new Date(new Date().getTime() - 20 * 60000),
