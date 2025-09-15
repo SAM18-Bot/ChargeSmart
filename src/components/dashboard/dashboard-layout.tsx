@@ -204,7 +204,7 @@ export default function DashboardLayout({ user }: { user: User }) {
   const handleDirectChargeRequest = () => {
     if (!selectedCharger || !kwhAmount) return;
     
-    const kwh = parseInt(kwhAmount, 10);
+    const kwh = parseFloat(kwhAmount);
     if (isNaN(kwh) || kwh <= 0) {
       toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid kWh amount.'});
       return;
@@ -488,13 +488,13 @@ export default function DashboardLayout({ user }: { user: User }) {
                         <p className="text-sm text-muted-foreground">Specify the exact amount of electricity you need (₹{PRICE_PER_KWH}/kWh).</p>
                         <div className="space-y-2">
                             <Label>kWh to Charge</Label>
-                            <Input type="number" min="1" max="100" value={kwhAmount} onChange={e => setKwhAmount(e.target.value)} placeholder="e.g., 25" required/>
+                            <Input type="number" min="1" max="100" step="0.1" value={kwhAmount} onChange={e => setKwhAmount(e.target.value)} placeholder="e.g., 25.5" required/>
                         </div>
-                        {kwhAmount && selectedCharger && <p className="text-center font-bold text-lg">Total Cost: ₹{(parseInt(kwhAmount, 10) * PRICE_PER_KWH).toFixed(2)}</p>}
+                        {kwhAmount && selectedCharger && !isNaN(parseFloat(kwhAmount)) && <p className="text-center font-bold text-lg">Total Cost: ₹{(parseFloat(kwhAmount) * PRICE_PER_KWH).toFixed(2)}</p>}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount}>Proceed to Payment</Button>
+                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount || isNaN(parseFloat(kwhAmount))}>Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
                 <TabsContent value="book">
