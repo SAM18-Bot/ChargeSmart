@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/contexts/auth-context';
+import { AuthWrapper } from '@/contexts/auth-wrapper';
 import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
 import './globals.css';
@@ -25,7 +26,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
+          <AuthWrapper>{children}</AuthWrapper>
           <Toaster />
         </AuthProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />

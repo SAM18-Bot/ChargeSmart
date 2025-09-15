@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { User as AppUser } from '@/lib/types';
 import { auth } from '@/lib/firebase';
 import { 
@@ -14,7 +14,6 @@ import {
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { Zap } from 'lucide-react';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -31,7 +30,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
@@ -81,18 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, logout };
-
-  if (loading && !['/login', '/register'].includes(pathname)) {
-      return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <div className="flex items-center space-x-4">
-          <Zap className="h-12 w-12 text-primary animate-pulse" />
-          <h1 className="text-4xl font-headline font-bold text-primary">ChargeSmart</h1>
-        </div>
-        <p className="mt-4 text-muted-foreground">Securing your session...</p>
-      </div>
-    );
-  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
