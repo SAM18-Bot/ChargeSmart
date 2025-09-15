@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Charger, User } from '@/lib/types';
-import { Zap, Users, Loader2, BatteryCharging, Hourglass } from 'lucide-react';
+import { Zap, Users, BatteryCharging, Hourglass } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { estimateTimeTillEmpty } from '@/ai/flows/estimate-time-till-empty';
+import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChargerCardProps {
@@ -19,39 +19,15 @@ interface ChargerCardProps {
 }
 
 export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUser }: ChargerCardProps) {
-  const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
-  const [isLoadingTime, setIsLoadingTime] = useState(false);
-  
   const isCurrentUserCharging = charger.status === 'Occupied' && charger.currentUser?.id === currentUser.id;
   const isCurrentUserInQueue = charger.queue.some(item => item.user.id === currentUser.id);
 
-  const fetchEstimate = () => {
-    if (charger.status === 'Occupied' && charger.currentUser && charger.currentVehicle) {
-      setIsLoadingTime(true);
-      estimateTimeTillEmpty({
-        chargerId: charger.id,
-        currentKwh: charger.kwhReserved || 50,
-        vehicleModel: charger.currentVehicle.model,
-        batteryPercentage: charger.currentVehicle.batteryPercentage || 20,
-        reservedKwh: charger.kwhReserved || 50
-      }).then(response => {
-        setEstimatedTime(response.estimatedTimeTillEmpty);
-      }).catch(err => {
-        console.error("Failed to estimate time:", err);
-        setEstimatedTime('~ 45 mins'); // Fallback estimate
-      }).finally(() => {
-        setIsLoadingTime(false);
-      });
+  const getTimeRemaining = () => {
+    if (charger.estimatedEndTime) {
+      return formatDistanceToNow(charger.estimatedEndTime, { addSuffix: true });
     }
+    return 'approx. 45 mins';
   };
-
-  useEffect(() => {
-    if (charger.status === 'Occupied') {
-      fetchEstimate();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charger.status, charger.id]);
-
 
   const getBadgeVariant = (status: 'Available' | 'Occupied') => {
     switch (status) {
@@ -95,9 +71,9 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
                 <span>Charging in progress...</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
-                {isLoadingTime && !estimatedTime ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />}
+                <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />
                 <span>
-                  {isLoadingTime && !estimatedTime ? 'Estimating time...' : `Free in approx. ${estimatedTime || 'N/A'}`}
+                  Free {getTimeRemaining()}
                 </span>
               </div>
             </div>
