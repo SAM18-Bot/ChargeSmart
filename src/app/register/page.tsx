@@ -76,6 +76,8 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isSubmitting}
+                name="name"
+                autoComplete="name"
               />
             </div>
             <div className="space-y-2">
@@ -88,6 +90,8 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
+                name="email"
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -100,6 +104,8 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isSubmitting}
+                name="password"
+                autoComplete="new-password"
               />
             </div>
             <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>

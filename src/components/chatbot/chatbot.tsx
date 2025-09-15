@@ -63,6 +63,8 @@ export default function Chatbot() {
           <Button
             onClick={() => setIsOpen(!isOpen)}
             className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-lg"
+            aria-label={isOpen ? 'Close chat' : 'Open chat'}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="h-8 w-8 text-primary-foreground" /> : <Bot className="h-8 w-8 text-primary-foreground" />}
           </Button>
@@ -140,8 +142,9 @@ export default function Chatbot() {
                       placeholder="Ask a question..."
                       disabled={isLoading}
                       className="rounded-full"
+                      aria-label="Your message"
                     />
-                    <Button onClick={handleSend} disabled={isLoading || input.trim() === ''} className="bg-accent hover:bg-accent/90 rounded-full w-10 h-10 p-0">
+                    <Button onClick={handleSend} disabled={isLoading || input.trim() === ''} className="bg-accent hover:bg-accent/90 rounded-full w-10 h-10 p-0" aria-label="Send message">
                       <Send className="h-5 w-5 text-accent-foreground" />
                     </Button>
                   </div>

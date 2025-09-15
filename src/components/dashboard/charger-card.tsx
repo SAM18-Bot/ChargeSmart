@@ -87,7 +87,7 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Avatar>
-                  <AvatarFallback className="bg-primary text-primary-foreground">{charger.currentUser?.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground" aria-label={`Avatar for ${charger.currentUser?.name}`}>{charger.currentUser?.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                     <p className="font-semibold">{charger.currentUser?.name}</p>
@@ -118,7 +118,7 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
                   <div key={item.user.id} className="flex items-center space-x-2 text-sm">
                     <span className="font-mono text-muted-foreground">{index + 1}.</span>
                      <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-xs bg-secondary">{item.user.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-xs bg-secondary" aria-label={`Avatar for ${item.user.name}`}>{item.user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span className={cn(item.user.id === currentUser.id && 'font-bold text-primary')}>{item.user.name}</span>
                   </div>

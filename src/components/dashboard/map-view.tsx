@@ -238,6 +238,7 @@ export function MapView({ chargers }: MapViewProps) {
                     size="icon" 
                     className="absolute top-3 right-3 z-10 bg-background/80 hover:bg-background"
                     onClick={handleLocateMe}
+                    aria-label="Locate me"
                     >
                         <Crosshair className="h-5 w-5 text-foreground" />
                     </Button>
@@ -261,6 +262,7 @@ export function MapView({ chargers }: MapViewProps) {
                   key={charger.id}
                   position={{ lat: charger.lat, lng: charger.lng }}
                   onClick={() => handleMarkerClick(charger)}
+                  title={charger.name}
                   icon={{
                     path: 'M13 10V3L4 14h7v7l9-11h-7z',
                     fillColor: charger.status === 'Available' ? '#4ade80' : '#facc15',
