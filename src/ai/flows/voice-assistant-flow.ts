@@ -11,6 +11,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { chargers, evs } from '@/lib/data';
 import { format } from 'date-fns';
+import wav from 'wav';
+import { googleAI } from '@genkit-ai/googleai';
 
 const PRICE_PER_KWH = 18;
 
@@ -56,6 +58,7 @@ export type VoiceCommandInput = z.infer<typeof VoiceCommandInputSchema>;
 
 const VoiceCommandOutputSchema = z.object({
     response: z.string().describe('The assistant\'s response to the user.'),
+    audio: z.string().describe("The base64 encoded WAV audio data as a data URI."),
     action: z.object({
         type: z.enum(['INITIATE_PAYMENT', 'BOOK_SLOT_CONFIRMED', 'REQUIRE_MORE_INFO', 'NONE']),
         payload: z.any().optional(),
@@ -90,6 +93,68 @@ User command: "{{command}}"
 `,
 });
 
+async function toWav(
+  pcmData: Buffer,
+  channels = 1,
+  rate = 24000,
+  sampleWidth = 2
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const writer = new wav.Writer({
+      channels,
+      sampleRate: rate,
+      bitDepth: sampleWidth * 8,
+    });
+
+    let bufs: any[] = [];
+    writer.on('error', reject);
+    writer.on('data', function (d) {
+      bufs.push(d);
+    });
+    writer.on('end', function () {
+      resolve(Buffer.concat(bufs).toString('base64'));
+    });
+
+    writer.write(pcmData);
+    writer.end();
+  });
+}
+
+const textToSpeechFlow = ai.defineFlow(
+  {
+    name: 'embeddedTextToSpeechFlow',
+    inputSchema: z.string(),
+    outputSchema: z.string(),
+  },
+  async (text) => {
+    const { media } = await ai.generate({
+      model: googleAI.model('gemini-2.5-flash-preview-tts'),
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+          },
+        },
+      },
+      prompt: text,
+    });
+
+    if (!media) {
+      throw new Error('No audio was generated.');
+    }
+    
+    const audioBuffer = Buffer.from(
+      media.url.substring(media.url.indexOf(',') + 1),
+      'base64'
+    );
+
+    const wavBase64 = await toWav(audioBuffer);
+    return 'data:audio/wav;base64,' + wavBase64;
+  }
+);
+
+
 const voiceAssistantFlow = ai.defineFlow(
   {
     name: 'voiceAssistantFlow',
@@ -101,75 +166,79 @@ const voiceAssistantFlow = ai.defineFlow(
 
     const toolCalls = history.filter(m => m.role === 'tool' && m.content.some(p => p.toolRequest));
     const lastToolRequest = toolCalls[toolCalls.length - 1]?.content.find(p => p.toolRequest)?.toolRequest?.input as any;
+    
+    let responseText: string;
+    let action: VoiceCommandOutput['action'] = { type: 'NONE' };
 
     if (!output) {
-      return { 
-          response: "I'm sorry, I didn't understand that. Could you please try again?",
-          action: { type: 'NONE' }
-      };
-    }
-
-    if (output.toolRequests && output.toolRequests.length > 0) {
+      responseText = "I'm sorry, I didn't understand that. Could you please try again?";
+      action = { type: 'NONE' };
+    } else if (output.toolRequests && output.toolRequests.length > 0) {
         const toolInput = output.toolRequests[0].input as any;
-
         const charger = chargers.find(c => c.name.toLowerCase() === toolInput.chargerName.toLowerCase());
-        if (!charger) {
-            return {
-                response: `I'm sorry, I couldn't find the charger named "${toolInput.chargerName}". Please try again with one of the available chargers.`,
-                action: { type: 'NONE' }
-            };
-        }
 
-        switch(toolInput.actionType) {
-            case 'DIRECT_CHARGE': {
-                const kwh = toolInput.details.kwh;
-                const cost = parseFloat((kwh * PRICE_PER_KWH).toFixed(2));
-                return {
-                    response: `Got it. Starting a direct charge of ${kwh} kWh at ${charger.name}. Please complete the payment.`,
-                    action: {
+        if (!charger) {
+            responseText = `I'm sorry, I couldn't find the charger named "${toolInput.chargerName}". Please try again with one of the available chargers.`;
+            action = { type: 'NONE' };
+        } else {
+            switch(toolInput.actionType) {
+                case 'DIRECT_CHARGE': {
+                    const kwh = toolInput.details.kwh;
+                    const cost = parseFloat((kwh * PRICE_PER_KWH).toFixed(2));
+                    responseText = `Got it. Starting a direct charge of ${kwh} kWh at ${charger.name}. Please complete the payment.`;
+                    action = {
                         type: 'INITIATE_PAYMENT',
                         payload: { charger, type: 'direct', kwh, cost }
-                    }
-                };
-            }
-            case 'SMART_CHARGE': {
-                const { evModel, batteryPercentage } = toolInput.details;
-                const selectedEVObject = evs.find(ev => ev.model.toLowerCase() === evModel.toLowerCase());
-                if (!selectedEVObject) {
-                    return { response: `Sorry, I don't recognize the EV model "${evModel}".`, action: { type: 'NONE' }};
+                    };
+                    break;
                 }
-                const kwhNeeded = parseFloat((((100 - batteryPercentage) / 100) * selectedEVObject.batteryCapacity).toFixed(2));
-                const cost = parseFloat((kwhNeeded * PRICE_PER_KWH).toFixed(2));
-                return {
-                    response: `Okay, starting a smart charge for your ${evModel} at ${charger.name}. That will be approximately ${kwhNeeded} kWh. Please complete the payment.`,
-                    action: {
-                        type: 'INITIATE_PAYMENT',
-                        payload: { charger, type: 'smart', kwh: kwhNeeded, cost, evModel, batteryPercentage }
+                case 'SMART_CHARGE': {
+                    const { evModel, batteryPercentage } = toolInput.details;
+                    const selectedEVObject = evs.find(ev => ev.model.toLowerCase() === evModel.toLowerCase());
+                    if (!selectedEVObject) {
+                        responseText = `Sorry, I don't recognize the EV model "${evModel}".`;
+                        action = { type: 'NONE' };
+                    } else {
+                        const kwhNeeded = parseFloat((((100 - batteryPercentage) / 100) * selectedEVObject.batteryCapacity).toFixed(2));
+                        const cost = parseFloat((kwhNeeded * PRICE_PER_KWH).toFixed(2));
+                        responseText = `Okay, starting a smart charge for your ${evModel} at ${charger.name}. That will be approximately ${kwhNeeded} kWh. Please complete the payment.`;
+                        action = {
+                            type: 'INITIATE_PAYMENT',
+                            payload: { charger, type: 'smart', kwh: kwhNeeded, cost, evModel, batteryPercentage }
+                        };
                     }
-                };
-            }
-            case 'BOOK_SLOT': {
-                 const [hours, minutes] = toolInput.details.time.split(':').map(Number);
-                 const bookingDate = new Date();
-                 const bookingStart = new Date(bookingDate.setHours(hours, minutes));
-
-                return {
-                    response: `Confirmed! I've booked a slot for you at ${charger.name} for today at ${format(bookingStart, "h:mm a")}.`,
-                    action: {
+                    break;
+                }
+                case 'BOOK_SLOT': {
+                     const [hours, minutes] = toolInput.details.time.split(':').map(Number);
+                     const bookingDate = new Date();
+                     const bookingStart = new Date(bookingDate.setHours(hours, minutes));
+                     responseText = `Confirmed! I've booked a slot for you at ${charger.name} for today at ${format(bookingStart, "h:mm a")}.`;
+                     action = {
                         type: 'BOOK_SLOT_CONFIRMED',
                         payload: { charger, time: toolInput.details.time, date: new Date() }
-                    }
-                };
+                    };
+                    break;
+                }
+                default:
+                    responseText = "I'm not sure how to handle that action. Could you try again?";
+                    action = { type: 'NONE' };
+                    break;
             }
         }
+    } else {
+        // If we are here, the model is likely asking for more info or just chatting.
+        responseText = output.message.content.find(p => p.text)?.text || "...";
+        action = { type: 'REQUIRE_MORE_INFO' };
     }
 
-    // If we are here, the model is likely asking for more info or just chatting.
-    return { 
-        response: output.message.content.find(p => p.text)?.text || "...",
-        action: { type: 'REQUIRE_MORE_INFO' }
+    // Now, convert the determined responseText to audio in the same flow.
+    const audioDataUri = await textToSpeechFlow(responseText);
+
+    return {
+        response: responseText,
+        audio: audioDataUri,
+        action: action,
     };
   }
 );
-
-    

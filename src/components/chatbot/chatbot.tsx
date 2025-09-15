@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { answerUserQuery } from '@/ai/flows/answer-user-queries';
 import { processVoiceCommand } from '@/ai/flows/voice-assistant-flow';
-import { textToSpeech } from '@/ai/flows/text-to-speech-flow';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -88,15 +87,12 @@ export default function Chatbot({ onAction }: ChatbotProps) {
         const botMessage: Message = { sender: 'bot', text: response.response };
         setMessages((prev) => [...prev, botMessage]);
         
-        // Let the parent component handle the action
         if (response.action && response.action.type !== 'NONE' && onAction) {
             onAction(response.action);
         }
 
-        // Convert response to speech
-        if (response.response) {
-            const audioResponse = await textToSpeech({ text: response.response });
-            playAudio(audioResponse.audio);
+        if (response.audio) {
+            playAudio(response.audio);
         }
 
     } catch (error) {
@@ -301,5 +297,3 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     </>
   );
 }
-
-    
