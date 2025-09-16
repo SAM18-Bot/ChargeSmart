@@ -30,7 +30,7 @@ export interface Booking {
 }
 
 export interface Charger {
-  id: string;
+  id:string;
   name: string;
   status: 'Available' | 'Occupied';
   lat: number;
@@ -43,4 +43,13 @@ export interface Charger {
   queue: QueueItem[];
   bookings?: Booking[];
   distance?: number;
+}
+
+export interface ChargingHistory {
+    id: string;
+    chargerName: string;
+    date: Date;
+    kwhCharged: number;
+    cost: number;
+    durationMinutes: number;
 }

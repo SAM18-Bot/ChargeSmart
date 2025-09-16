@@ -23,6 +23,7 @@ import { Loader2, Navigation, Ticket } from 'lucide-react';
 import { ChargingOptionsCard } from './charging-options-card';
 import { Slider } from '../ui/slider';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 declare global {
     interface Window {
@@ -442,6 +443,18 @@ export default function DashboardLayout({ user }: { user: User }) {
 
       </main>
       
+      <footer className="w-full border-t border-border mt-12 py-8">
+        <div className="container mx-auto text-center text-muted-foreground text-sm">
+            <p>&copy; {new Date().getFullYear()} ChargeSmart. All rights reserved.</p>
+            <nav className="mt-4 flex justify-center gap-4">
+                <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
+                <Link href="/history" className="hover:text-primary transition-colors">Charging History</Link>
+                <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+                <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            </nav>
+        </div>
+      </footer>
+
       <Chatbot onAction={handleAssistantAction} />
       
       {/* Charging Options Modal */}

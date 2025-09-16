@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import type { User } from '@/lib/types';
-import { LifeBuoy, LogOut, User as UserIcon } from 'lucide-react';
+import { LifeBuoy, LogOut, User as UserIcon, History } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
@@ -49,9 +49,17 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <UserIcon className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/history">
+                <History className="mr-2 h-4 w-4" />
+                <span>History</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <LifeBuoy className="mr-2 h-4 w-4" />
