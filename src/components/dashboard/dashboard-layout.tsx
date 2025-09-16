@@ -522,7 +522,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                         <div className='flex items-center gap-4'>
                              <Input 
                                 type="number" 
-                                min="0.5" 
+                                min="0.1" 
                                 max="100" 
                                 step="0.1" 
                                 value={kwhAmount} 
@@ -534,8 +534,8 @@ export default function DashboardLayout({ user }: { user: User }) {
                                 value={[isNaN(kwhValue) ? 0 : kwhValue]}
                                 onValueChange={(value) => setKwhAmount(String(value[0]))}
                                 max={50}
-                                min={0.5}
-                                step={0.5}
+                                min={0.1}
+                                step={0.1}
                             />
                         </div>
                         <div className="flex justify-center gap-2">
