@@ -22,6 +22,7 @@ import Image from 'next/image';
 import { Loader2, Navigation, Ticket } from 'lucide-react';
 import { ChargingOptionsCard } from './charging-options-card';
 import { Slider } from '../ui/slider';
+import { motion } from 'framer-motion';
 
 declare global {
     interface Window {
@@ -360,14 +361,24 @@ export default function DashboardLayout({ user }: { user: User }) {
   const kwhValue = parseFloat(kwhAmount);
   const calculatedCost = !isNaN(kwhValue) ? (kwhValue * PRICE_PER_KWH).toFixed(2) : '0.00';
 
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
       <Header user={user} assistantDialog={<AiAssistantDialog evs={evs} chargers={chargers} />} />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-8">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-12">
 
         {/* Section 1: Charging Options */}
-        <section>
-            <h1 className="text-3xl font-bold font-headline mb-6">Start Your Session</h1>
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+            <h1 className="text-3xl font-bold font-headline mb-6 text-foreground">Start Your Session</h1>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <ChargingOptionsCard 
                     title="Smart Charge"
@@ -385,11 +396,16 @@ export default function DashboardLayout({ user }: { user: User }) {
                     onClick={() => handleOpenOptionsModal('book')}
                 />
             </div>
-        </section>
+        </motion.section>
 
         {/* Section 2: Nearest Stations */}
-        <section>
-            <h2 className="text-3xl font-bold font-headline mb-6 flex items-center gap-3">
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+            <h2 className="text-3xl font-bold font-headline mb-6 flex items-center gap-3 text-foreground">
                 <Navigation className="w-8 h-8 text-primary" />
                 Nearest Stations
             </h2>
@@ -411,13 +427,18 @@ export default function DashboardLayout({ user }: { user: User }) {
                 ))}
                 </div>
             )}
-        </section>
+        </motion.section>
         
         {/* Section 3: Map View */}
-        <section>
-            <h2 className="text-3xl font-bold font-headline mb-6">Station Map</h2>
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+            <h2 className="text-3xl font-bold font-headline mb-6 text-foreground">Station Map</h2>
             <MapView chargers={chargers} />
-        </section>
+        </motion.section>
 
       </main>
       
@@ -513,7 +534,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                         </div>
 
                         {kwhAmount && selectedCharger && !isNaN(kwhValue) && (
-                            <p className="text-center font-bold text-lg">Total Cost: ₹{calculatedCost}</p>
+                            <p className="text-center font-bold text-lg text-primary">Total Cost: ₹{calculatedCost}</p>
                         )}
                     </div>
                     <DialogFooter>
@@ -595,5 +616,3 @@ export default function DashboardLayout({ user }: { user: User }) {
     </div>
   );
 }
-
-    

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const GoogleIcon = () => (
     <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -92,77 +93,87 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4 font-body">
-      <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
-            <Logo />
-          </div>
-          <CardTitle className="text-3xl font-headline text-primary">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleEmailLogin} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                name="email"
-                autoComplete="email"
-              />
+      <motion.div
+         initial={{ opacity: 0, y: -20 }}
+         animate={{ opacity: 1, y: 0 }}
+         transition={{ duration: 0.5 }}
+      >
+        <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-primary/10">
+          <CardHeader className="text-center">
+            <motion.div 
+              className="mx-auto mb-4"
+              whileHover={{ scale: 1.1, rotate: -5 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            >
+              <Logo />
+            </motion.div>
+            <CardTitle className="text-3xl font-headline text-primary">Welcome Back</CardTitle>
+            <CardDescription>Sign in to access your dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleEmailLogin} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  name="email"
+                  autoComplete="email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  name="password"
+                  autoComplete="current-password"
+                />
+              </div>
+              <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In
+              </Button>
+            </form>
+           
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-                name="password"
-                autoComplete="current-password"
-              />
-            </div>
-            <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+            
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+               {isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+               ) : (
+                  <GoogleIcon />
+               )}
+              Google
             </Button>
-          </form>
-         
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
-             {isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-             ) : (
-                <GoogleIcon />
-             )}
-            Google
-          </Button>
 
-          <p className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+            <p className="mt-6 text-center text-sm">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="font-semibold text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
