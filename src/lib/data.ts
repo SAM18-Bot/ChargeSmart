@@ -230,6 +230,38 @@ export const chargers: Charger[] = [
       { user: { id: '15', name: 'Ayushmann' }, joinTime: new Date(new Date().getTime() - 2 * 60000) },
     ],
   },
+  // Chandigarh
+  {
+    id: 'CZ-CH01',
+    name: 'Elante Mall, Chandigarh',
+    status: 'Available',
+    lat: 30.7055,
+    lng: 76.8013,
+    queue: [],
+  },
+  // Indore
+  {
+    id: 'CZ-I01',
+    name: 'Treasure Island Mall, Indore',
+    status: 'Occupied',
+    lat: 22.7177,
+    lng: 75.8819,
+    currentUser: { id: '16', name: 'Sara' },
+    currentVehicle: { model: 'Mahindra XUV400', batteryPercentage: 50 },
+    kwhReserved: 20,
+    startTime: new Date(new Date().getTime() - 22 * 60000),
+    estimatedEndTime: new Date(new Date().getTime() + 20 * 60000),
+    queue: [],
+  },
+  // Kochi
+  {
+    id: 'CZ-KO01',
+    name: 'Lulu Mall, Kochi',
+    status: 'Available',
+    lat: 10.0279,
+    lng: 76.3081,
+    queue: [],
+  },
 ];
 
 export const evs: EV[] = [
