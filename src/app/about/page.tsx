@@ -145,7 +145,7 @@ export default function AboutPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Team</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-              <TeamMemberCard name="Aarav Sharma" role="CEO & Founder" imageUrl="https://picsum.photos/seed/team1/200/200" />
+              <TeamMemberCard name="Sameer Bansode" role="CEO & Founder" imageUrl="https://picsum.photos/seed/team1/200/200" />
               <TeamMemberCard name="Diya Mehta" role="Chief Technology Officer" imageUrl="https://picsum.photos/seed/team2/200/200" />
               <TeamMemberCard name="Rohan Desai" role="Head of Operations" imageUrl="https://picsum.photos/seed/team3/200/200" />
               <TeamMemberCard name="Priya Kapoor" role="Lead UX Designer" imageUrl="https://picsum.photos/seed/team4/200/200" />
