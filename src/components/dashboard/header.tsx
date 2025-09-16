@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import type { User } from '@/lib/types';
-import { LifeBuoy, LogOut, User as UserIcon, History } from 'lucide-react';
+import { LifeBuoy, LogOut, User as UserIcon, History, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
@@ -32,6 +32,11 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
       </Link>
       <div className="ml-auto flex items-center gap-4">
         {assistantDialog}
+        <Button variant="ghost" asChild>
+            <Link href="/about">
+                <Info className="mr-2 h-4 w-4" /> About Us
+            </Link>
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -61,9 +66,11 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
                 <span>History</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <LifeBuoy className="mr-2 h-4 w-4" />
-              <span>Support</span>
+            <DropdownMenuItem asChild>
+              <Link href="/about">
+                <LifeBuoy className="mr-2 h-4 w-4" />
+                <span>Support</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
