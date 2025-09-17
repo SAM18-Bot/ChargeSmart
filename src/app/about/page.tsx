@@ -18,8 +18,10 @@ const TeamMemberCard = ({ name, role, imageUrl }: { name: string; role: string; 
       <Image
         src={imageUrl}
         alt={`Photo of ${name}`}
-        layout="fill"
+        width={200}
+        height={200}
         className="rounded-full object-cover border-4 border-primary/50"
+        data-ai-hint="developer portrait"
       />
     </div>
     <h3 className="text-lg font-bold text-foreground">{name}</h3>
@@ -113,12 +115,12 @@ export default function AboutPage() {
             <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
                 <div className="md:w-1/2">
                     <Image
-                        src="https://picsum.photos/seed/chargers/600/400"
+                        src="https://picsum.photos/seed/future-mobility/600/400"
                         alt="Electric car charging in a futuristic city"
                         width={600}
                         height={400}
                         className="rounded-lg shadow-2xl"
-                        data-ai-hint="electric car city"
+                        data-ai-hint="futuristic ev"
                     />
                 </div>
                 <div className="md:w-1/2">
@@ -145,7 +147,7 @@ export default function AboutPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Developer</h2>
             <div className="flex justify-center">
-              <TeamMemberCard name="Sameer Bansode" role="Developer" imageUrl="https://picsum.photos/seed/dev/200/200" />
+              <TeamMemberCard name="Sameer Bansode" role="Developer" imageUrl="https://picsum.photos/seed/developer-portrait/200/200" />
             </div>
           </div>
         </motion.section>
