@@ -162,11 +162,9 @@ const voiceAssistantFlow = ai.defineFlow(
     outputSchema: VoiceCommandOutputSchema,
   },
   async (input) => {
-    const { history = [], output } = await prompt(input);
+    const genkitResponse = await prompt(input);
+    const output = genkitResponse.output;
 
-    const toolCalls = history.filter(m => m.role === 'tool' && m.content.some(p => p.toolRequest));
-    const lastToolRequest = toolCalls[toolCalls.length - 1]?.content.find(p => p.toolRequest)?.toolRequest?.input as any;
-    
     let responseText: string;
     let action: VoiceCommandOutput['action'] = { type: 'NONE' };
 

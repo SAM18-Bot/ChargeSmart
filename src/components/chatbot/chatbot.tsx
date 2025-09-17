@@ -73,6 +73,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
   };
 
   const handleVoiceCommand = async (command: string) => {
+    if (command.trim() === '') return;
     const userMessage: Message = { sender: 'user', text: command };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
@@ -107,7 +108,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
   const startRecording = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Your browser does not support Speech Recognition. Please try Chrome.");
+      toast({ variant: 'destructive', title: "Unsupported Browser", description: "Your browser does not support Speech Recognition. Please try Chrome."});
       return;
     }
 
@@ -167,7 +168,18 @@ export default function Chatbot({ onAction }: ChatbotProps) {
   useEffect(() => {
     if (isOpen) {
       setMessages([{ sender: 'bot', text: 'Hello! How can I help you with your EV charging today? You can ask me questions or use the mic to book a slot.' }]);
+    } else {
+        // Stop any audio playing when closing the chatbot
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
+        // Stop recording if it's active
+        if (isRecording) {
+            stopRecording();
+        }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (
