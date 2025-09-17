@@ -67,10 +67,10 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/about">
+              <a href="mailto:sameerbansode001@gmail.com">
                 <LifeBuoy className="mr-2 h-4 w-4" />
                 <span>Support</span>
-              </Link>
+              </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
