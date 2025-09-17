@@ -155,6 +155,7 @@ export default function AboutPage() {
         {/* Contact Section */}
         <motion.section
           className="py-16 bg-primary/10"
+          id="contact"
           variants={sectionVariants}
           initial="hidden"
           whileInView="visible"

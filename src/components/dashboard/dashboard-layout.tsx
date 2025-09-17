@@ -245,7 +245,8 @@ export default function DashboardLayout({ user }: { user: User }) {
     
     toast({
         title: "Slot Booked!",
-        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}.`,
+        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}. If you're late, your booking may be extended if the next slot is free, otherwise a 50% cancellation fee will apply.`,
+        duration: 9000,
     });
     
     closeAndResetModal();
@@ -350,7 +351,7 @@ export default function DashboardLayout({ user }: { user: User }) {
             durationMinutes: chargeTimeMinutes,
           };
 
-          const existingHistory: ChargingHistory[] = JSON.parse(localStorage.getItem('chargingHistory') || '[]');
+          const existingHistory: ChargingHistory[] = JSON.parse(localStorage.getItem('chargingHistory') || '[]').map((item: any) => ({ ...item, date: new Date(item.date) }));
           const updatedHistory = [...existingHistory, historyEntry];
           localStorage.setItem('chargingHistory', JSON.stringify(updatedHistory));
 
