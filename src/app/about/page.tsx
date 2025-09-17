@@ -113,7 +113,7 @@ export default function AboutPage() {
             <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
                 <div className="md:w-1/2">
                     <Image
-                        src="https://picsum.photos/seed/about/600/400"
+                        src="https://picsum.photos/seed/chargers/600/400"
                         alt="Electric car charging in a futuristic city"
                         width={600}
                         height={400}
