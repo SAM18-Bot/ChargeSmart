@@ -11,8 +11,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { chargers, evs } from '@/lib/data';
 import { format } from 'date-fns';
-import wav from 'wav';
-import { googleAI } from '@genkit-ai/googleai';
 
 const PRICE_PER_KWH = 18;
 
@@ -34,7 +32,7 @@ const selectBookingActionTool = ai.defineTool(
     }),
     outputSchema: z.object({
         success: z.boolean(),
-        message: z.string().describe('A confirmation message to be spoken to the user.'),
+        message: z.string().describe('A confirmation message for the assistant to use in its response.'),
     }),
   },
   async (input) => {
@@ -58,7 +56,6 @@ export type VoiceCommandInput = z.infer<typeof VoiceCommandInputSchema>;
 
 const VoiceCommandOutputSchema = z.object({
     response: z.string().describe('The assistant\'s response to the user.'),
-    audio: z.string().describe("The base64 encoded WAV audio data as a data URI."),
     action: z.object({
         type: z.enum(['INITIATE_PAYMENT', 'BOOK_SLOT_CONFIRMED', 'REQUIRE_MORE_INFO', 'NONE']),
         payload: z.any().optional(),
@@ -92,67 +89,6 @@ Use the 'initiateChargingAction' tool to finalize the user's request.
 User command: "{{command}}"
 `,
 });
-
-async function toWav(
-  pcmData: Buffer,
-  channels = 1,
-  rate = 24000,
-  sampleWidth = 2
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const writer = new wav.Writer({
-      channels,
-      sampleRate: rate,
-      bitDepth: sampleWidth * 8,
-    });
-
-    let bufs: any[] = [];
-    writer.on('error', reject);
-    writer.on('data', function (d) {
-      bufs.push(d);
-    });
-    writer.on('end', function () {
-      resolve(Buffer.concat(bufs).toString('base64'));
-    });
-
-    writer.write(pcmData);
-    writer.end();
-  });
-}
-
-const textToSpeechFlow = ai.defineFlow(
-  {
-    name: 'embeddedTextToSpeechFlow',
-    inputSchema: z.string(),
-    outputSchema: z.string(),
-  },
-  async (text) => {
-    const { media } = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash-preview-tts'),
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
-          },
-        },
-      },
-      prompt: text,
-    });
-
-    if (!media) {
-      throw new Error('No audio was generated.');
-    }
-    
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-
-    const wavBase64 = await toWav(audioBuffer);
-    return 'data:audio/wav;base64,' + wavBase64;
-  }
-);
 
 
 const voiceAssistantFlow = ai.defineFlow(
@@ -230,12 +166,8 @@ const voiceAssistantFlow = ai.defineFlow(
         action = { type: 'REQUIRE_MORE_INFO' };
     }
 
-    // Now, convert the determined responseText to audio in the same flow.
-    const audioDataUri = await textToSpeechFlow(responseText);
-
     return {
         response: responseText,
-        audio: audioDataUri,
         action: action,
     };
   }

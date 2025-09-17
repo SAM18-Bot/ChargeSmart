@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   sender: 'user' | 'bot';
@@ -30,6 +31,7 @@ interface ChatbotProps {
 
 export default function Chatbot({ onAction }: ChatbotProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -39,7 +41,6 @@ export default function Chatbot({ onAction }: ChatbotProps) {
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleSend = async (textToSend?: string) => {
     const currentInput = textToSend || input;
@@ -62,15 +63,6 @@ export default function Chatbot({ onAction }: ChatbotProps) {
       setIsLoading(false);
     }
   };
-  
-  const playAudio = (audioDataUri: string) => {
-    if (audioRef.current) {
-        audioRef.current.pause();
-    }
-    const audio = new Audio(audioDataUri);
-    audioRef.current = audio;
-    audio.play();
-  };
 
   const handleVoiceCommand = async (command: string) => {
     if (command.trim() === '') return;
@@ -90,10 +82,6 @@ export default function Chatbot({ onAction }: ChatbotProps) {
         
         if (response.action && response.action.type !== 'NONE' && onAction) {
             onAction(response.action);
-        }
-
-        if (response.audio) {
-            playAudio(response.audio);
         }
 
     } catch (error) {
@@ -138,6 +126,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error', event.error);
+      toast({ variant: 'destructive', title: "Voice Error", description: `An error occurred: ${event.error}. Please try again.`})
       setIsRecording(false);
     };
 
@@ -169,12 +158,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     if (isOpen) {
       setMessages([{ sender: 'bot', text: 'Hello! How can I help you with your EV charging today? You can ask me questions or use the mic to book a slot.' }]);
     } else {
-        // Stop any audio playing when closing the chatbot
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
-        }
-        // Stop recording if it's active
+        // Stop recording if it's active when closing the chatbot
         if (isRecording) {
             stopRecording();
         }
