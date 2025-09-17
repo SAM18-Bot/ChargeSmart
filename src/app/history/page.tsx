@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/dashboard/header';
 import { useAuth } from '@/hooks/use-auth';
-import { chargingHistory as mockHistory } from '@/lib/data';
 import type { ChargingHistory } from '@/lib/types';
 import {
   Table,
@@ -22,8 +21,22 @@ import Link from 'next/link';
 
 export default function HistoryPage() {
   const { user } = useAuth();
-  const [history, setHistory] = useState<ChargingHistory[]>(mockHistory);
+  const [history, setHistory] = useState<ChargingHistory[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: keyof ChargingHistory; direction: 'ascending' | 'descending' } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const storedHistory = localStorage.getItem('chargingHistory');
+        if (storedHistory) {
+            // Parse and convert date strings back to Date objects
+            const parsedHistory = JSON.parse(storedHistory).map((item: any) => ({
+                ...item,
+                date: new Date(item.date),
+            }));
+            setHistory(parsedHistory);
+        }
+    }
+  }, []);
 
   const sortedHistory = [...history].sort((a, b) => {
     if (sortConfig !== null) {
@@ -34,7 +47,8 @@ export default function HistoryPage() {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
     }
-    return 0;
+    // Default sort by date descending
+    return b.date.getTime() - a.date.getTime();
   });
 
   const requestSort = (key: keyof ChargingHistory) => {
@@ -85,7 +99,7 @@ export default function HistoryPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {history.length > 0 ? (
+              {sortedHistory.length > 0 ? (
                 <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -138,7 +152,7 @@ export default function HistoryPage() {
               ) : (
                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
                   <h3 className="text-xl font-semibold text-muted-foreground">No History Found</h3>
-                  <p className="text-muted-foreground mt-2">You haven't charged with us yet. Let's change that!</p>
+                  <p className="text-muted-foreground mt-2">You haven't charged with us yet. Your sessions will appear here.</p>
                   <Button asChild className="mt-4">
                     <Link href="/">Find a Charger</Link>
                   </Button>

@@ -4,7 +4,7 @@ import Header from '@/components/dashboard/header';
 import { Logo } from '@/components/icons/logo';
 import { useAuth } from '@/hooks/use-auth';
 import { motion } from 'framer-motion';
-import { Users, Zap, Leaf, Heart } from 'lucide-react';
+import { Users, Zap, Leaf, Heart, Mail } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -150,6 +150,26 @@ export default function AboutPage() {
               <TeamMemberCard name="Sameer Bansode" role="Developer" imageUrl="https://picsum.photos/seed/developer-portrait/200/200" />
             </div>
           </div>
+        </motion.section>
+
+        {/* Contact Section */}
+        <motion.section
+          className="py-16 bg-primary/10"
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
+            <div className="container mx-auto px-4 text-center">
+                 <h2 className="text-3xl font-bold font-headline text-foreground mb-4">Get In Touch</h2>
+                 <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+                    Have questions, feedback, or a partnership inquiry? We'd love to hear from you. Reach out to our team, and we'll get back to you as soon as possible.
+                 </p>
+                 <a href="mailto:sameerbansode001@gmail.com" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90">
+                    <Mail className="mr-3 h-5 w-5" />
+                    Contact Us
+                </a>
+            </div>
         </motion.section>
       </main>
     </div>

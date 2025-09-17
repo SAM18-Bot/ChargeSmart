@@ -285,37 +285,4 @@ export const evs: EV[] = [
     { model: 'Tesla Model Y', batteryCapacity: 82 },
 ];
 
-export const chargingHistory: ChargingHistory[] = [
-    {
-      id: 'CH-001',
-      chargerName: 'Phoenix Marketcity, Pune',
-      date: new Date('2024-05-20T10:00:00'),
-      kwhCharged: 25.5,
-      cost: 459.00,
-      durationMinutes: 65,
-    },
-    {
-      id: 'CH-002',
-      chargerName: 'Jio World Drive, Mumbai',
-      date: new Date('2024-05-15T18:30:00'),
-      kwhCharged: 30.0,
-      cost: 540.00,
-      durationMinutes: 75,
-    },
-    {
-      id: 'CH-003',
-      chargerName: 'Select Citywalk, Delhi',
-      date: new Date('2024-05-10T12:00:00'),
-      kwhCharged: 15.2,
-      cost: 273.60,
-      durationMinutes: 40,
-    },
-    {
-      id: 'CH-004',
-      chargerName: 'Amanora Mall, Pune',
-      date: new Date('2024-05-05T20:00:00'),
-      kwhCharged: 40.8,
-      cost: 734.40,
-      durationMinutes: 110,
-    },
-  ];
+export const chargingHistory: ChargingHistory[] = [];

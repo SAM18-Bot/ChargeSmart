@@ -5,7 +5,7 @@ import Header from '@/components/dashboard/header';
 import ChargerCard from '@/components/dashboard/charger-card';
 import { MapView } from '@/components/dashboard/map-view';
 import { chargers as initialChargers, evs as initialEvs } from '@/lib/data';
-import type { Charger, EV, User, QueueItem } from '@/lib/types';
+import type { Charger, EV, User, QueueItem, ChargingHistory } from '@/lib/types';
 import { AiAssistantDialog } from './ai-assistant-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -132,18 +132,62 @@ export default function DashboardLayout({ user }: { user: User }) {
   }
   
   const handleJoinQueue = (chargerId: string) => {
-    setChargers(prevChargers => prevChargers.map(c => {
-      if (c.id === chargerId && !c.queue.some(item => item.user.id === user.id)) {
-        const newQueueItem: QueueItem = { user, joinTime: new Date() };
-        toast({
-          title: "Joined Queue",
-          description: `You're in the queue for ${c.name}.`,
+    setChargers(prevChargers => {
+        const newChargers = prevChargers.map(c => {
+            if (c.id === chargerId && !c.queue.some(item => item.user.id === user.id)) {
+                const newQueueItem: QueueItem = { user, joinTime: new Date() };
+                toast({
+                    title: "Joined Queue",
+                    description: `You're in the queue for ${c.name}.`,
+                });
+                return { ...c, queue: [...c.queue, newQueueItem] };
+            }
+            return c;
         });
-        return { ...c, queue: [...c.queue, newQueueItem] };
-      }
-      return c;
-    }));
+
+        // Simulate queue progression
+        setTimeout(() => {
+            advanceQueue(chargerId);
+        }, 30000); // Check queue every 30 seconds
+
+        return newChargers;
+    });
   };
+
+  const advanceQueue = (chargerId: string) => {
+    setChargers(prevChargers => {
+        const charger = prevChargers.find(c => c.id === chargerId);
+        if (charger && charger.status === 'Available' && charger.queue.length > 0) {
+            const nextUser = charger.queue[0];
+            
+            // Notify next user
+            if (nextUser.user.id === user.id) {
+                toast({
+                    title: "It's your turn!",
+                    description: `The charger ${charger.name} is now available for you.`,
+                });
+            }
+
+            // In a real app, you'd have a more robust system for this.
+            // For now, we just open the charge modal for the user if it's their turn.
+            if (nextUser.user.id === user.id) {
+               handleOpenChargeModal(chargerId);
+            }
+            
+            return prevChargers.map(c => {
+                if (c.id === chargerId) {
+                    return {
+                        ...c,
+                        // The user will be removed from queue once they start charging
+                    };
+                }
+                return c;
+            });
+        }
+        return prevChargers;
+    });
+  }
+
 
   const initiatePayment = (chargeDetails: PendingCharge) => {
     setPendingCharge(chargeDetails);
@@ -244,11 +288,11 @@ export default function DashboardLayout({ user }: { user: User }) {
             description: `Your transaction is complete. Starting your charge now.`,
           });
           
-          startChargingSession(pendingCharge);
+          startChargingSession(pendingCharge, response.razorpay_payment_id);
           generateQrTicket(pendingCharge, response.razorpay_payment_id);
         },
         prefill: { name: user.name, email: user.email },
-        theme: { color: '#5B21B6' },
+        theme: { color: '#F36C4F' },
         modal: {
           ondismiss: () => {
             toast({
@@ -274,13 +318,16 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
   }
 
-  const startChargingSession = (chargeDetails: PendingCharge) => {
+  const startChargingSession = (chargeDetails: PendingCharge, transactionId: string) => {
       const chargeTimeMinutes = Math.round((chargeDetails.kwh / CHARGER_POWER_KW) * 60);
       const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
 
       setChargers(prevChargers => prevChargers.map(c => {
         if (c.id === chargeDetails.charger.id) {
-          return {
+          // Remove user from queue if they were in it
+          const newQueue = c.queue.filter(item => item.user.id !== user.id);
+          
+          const newChargerState: Charger = {
             ...c,
             status: 'Occupied',
             currentUser: user,
@@ -290,7 +337,31 @@ export default function DashboardLayout({ user }: { user: User }) {
             kwhReserved: chargeDetails.kwh,
             startTime: new Date(),
             estimatedEndTime: chargeEndTime,
+            queue: newQueue,
           };
+
+          // Save to history
+          const historyEntry: ChargingHistory = {
+            id: transactionId,
+            chargerName: newChargerState.name,
+            date: new Date(),
+            kwhCharged: chargeDetails.kwh,
+            cost: chargeDetails.cost,
+            durationMinutes: chargeTimeMinutes,
+          };
+
+          const existingHistory: ChargingHistory[] = JSON.parse(localStorage.getItem('chargingHistory') || '[]');
+          const updatedHistory = [...existingHistory, historyEntry];
+          localStorage.setItem('chargingHistory', JSON.stringify(updatedHistory));
+
+
+          // Simulate charger becoming free later
+          setTimeout(() => {
+            setChargers(prev => prev.map(ch => ch.id === chargeDetails.charger.id ? { ...ch, status: 'Available', currentUser: undefined, currentVehicle: undefined, startTime: undefined, estimatedEndTime: undefined } : ch))
+            advanceQueue(chargeDetails.charger.id);
+          }, chargeTimeMinutes * 60000); // convert minutes to ms
+
+          return newChargerState;
         }
         return c;
       }));
@@ -449,8 +520,8 @@ export default function DashboardLayout({ user }: { user: User }) {
             <nav className="mt-4 flex justify-center gap-4">
                 <Link href="/about" className="hover:text-primary transition-colors">About Us</Link>
                 <Link href="/history" className="hover:text-primary transition-colors">Charging History</Link>
-                <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
-                <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+                <Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
+                <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             </nav>
         </div>
       </footer>
