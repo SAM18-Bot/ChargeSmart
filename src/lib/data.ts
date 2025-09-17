@@ -13,17 +13,10 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-002',
     name: 'Phoenix Marketcity, Pune',
-    status: 'Occupied',
+    status: 'Available',
     lat: 18.5621,
     lng: 73.9167,
-    currentUser: { id: '2', name: 'Priya' },
-    currentVehicle: { model: 'Tesla Model 3', batteryPercentage: 45 },
-    kwhReserved: 40,
-    startTime: new Date(new Date().getTime() - 15 * 60000), // 15 mins ago
-    estimatedEndTime: new Date(new Date().getTime() + 15 * 60000), // 15 mins from now
-    queue: [
-      { user: { id: '3', name: 'Rohan' }, joinTime: new Date(new Date().getTime() - 10 * 60000) },
-    ],
+    queue: [],
   },
   {
     id: 'CZ-003',
@@ -36,17 +29,10 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-004',
     name: 'Amanora Mall, Pune',
-    status: 'Occupied',
+    status: 'Available',
     lat: 18.5244,
     lng: 73.9357,
-    currentUser: { id: '4', name: 'Sameer' },
-    currentVehicle: { model: 'MG ZS EV', batteryPercentage: 30 },
-    kwhReserved: 35,
-    startTime: new Date(new Date().getTime() - 10 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 35 * 60000),
-    queue: [
-       { user: { id: '5', name: 'Anjali' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
-    ],
+    queue: [],
   },
   {
     id: 'CZ-005',
@@ -59,14 +45,9 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-006',
     name: 'Elpro City Square, Pune',
-    status: 'Occupied',
+    status: 'Available',
     lat: 18.6220,
     lng: 73.8143,
-    currentUser: { id: '6', name: 'Vikram' },
-    currentVehicle: { model: 'Hyundai Kona Electric', batteryPercentage: 60 },
-    kwhReserved: 25,
-    startTime: new Date(new Date().getTime() - 20 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 25 * 60000),
     queue: [],
   },
   {
@@ -97,17 +78,10 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-M02',
     name: 'Jio World Drive, Mumbai',
-    status: 'Occupied',
+    status: 'Available',
     lat: 19.0669,
     lng: 72.8621,
-    currentUser: { id: '7', name: 'Alia' },
-    currentVehicle: { model: 'Audi e-tron', batteryPercentage: 55 },
-    kwhReserved: 50,
-    startTime: new Date(new Date().getTime() - 25 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 40 * 60000),
-    queue: [
-      { user: { id: '8', name: 'Varun' }, joinTime: new Date(new Date().getTime() - 12 * 60000) },
-    ],
+    queue: [],
   },
   // Delhi-NCR
   {
@@ -130,14 +104,9 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-B01',
     name: 'UB City, Bangalore',
-    status: 'Occupied',
+    status: 'Available',
     lat: 12.9719,
     lng: 77.5937,
-    currentUser: { id: '9', name: 'Deepika' },
-    currentVehicle: { model: 'Jaguar I-PACE', batteryPercentage: 20 },
-    kwhReserved: 70,
-    startTime: new Date(new Date().getTime() - 5 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 60 * 60000),
     queue: [],
   },
   {
@@ -160,18 +129,10 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-C02',
     name: 'Phoenix Marketcity, Chennai',
-    status: 'Occupied',
+    status: 'Available',
     lat: 12.9908,
     lng: 80.2177,
-    currentUser: { id: '10', name: 'Suriya' },
-    currentVehicle: { model: 'BYD Atto 3', batteryPercentage: 70 },
-    kwhReserved: 15,
-    startTime: new Date(new Date().getTime() - 30 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 10 * 60000),
-    queue: [
-      { user: { id: '11', name: 'Trisha' }, joinTime: new Date(new Date().getTime() - 15 * 60000) },
-      { user: { id: '12', name: 'Vijay' }, joinTime: new Date(new Date().getTime() - 5 * 60000) },
-    ],
+    queue: [],
   },
   // Kolkata
   {
@@ -186,14 +147,9 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-H01',
     name: 'Inorbit Mall, Hyderabad',
-    status: 'Occupied',
+    status: 'Available',
     lat: 17.4262,
     lng: 78.3845,
-    currentUser: { id: '13', name: 'Prabhas' },
-    currentVehicle: { model: 'Kia EV6', batteryPercentage: 40 },
-    kwhReserved: 45,
-    startTime: new Date(new Date().getTime() - 18 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 30 * 60000),
     queue: [],
   },
   // Ahmedabad
@@ -218,17 +174,10 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-L01',
     name: 'Phoenix Palassio, Lucknow',
-    status: 'Occupied',
+    status: 'Available',
     lat: 26.8049,
     lng: 81.0016,
-    currentUser: { id: '14', name: 'Kriti' },
-    currentVehicle: { model: 'Tata Nexon EV', batteryPercentage: 25 },
-    kwhReserved: 22,
-    startTime: new Date(new Date().getTime() - 8 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 45 * 60000),
-    queue: [
-      { user: { id: '15', name: 'Ayushmann' }, joinTime: new Date(new Date().getTime() - 2 * 60000) },
-    ],
+    queue: [],
   },
   // Chandigarh
   {
@@ -243,14 +192,9 @@ export const chargers: Charger[] = [
   {
     id: 'CZ-I01',
     name: 'Treasure Island Mall, Indore',
-    status: 'Occupied',
+    status: 'Available',
     lat: 22.7177,
     lng: 75.8819,
-    currentUser: { id: '16', name: 'Sara' },
-    currentVehicle: { model: 'Mahindra XUV400', batteryPercentage: 50 },
-    kwhReserved: 20,
-    startTime: new Date(new Date().getTime() - 22 * 60000),
-    estimatedEndTime: new Date(new Date().getTime() + 20 * 60000),
     queue: [],
   },
   // Kochi
