@@ -124,7 +124,7 @@ export default function AboutPage() {
                 <div className="md:w-1/2">
                     <h2 className="text-3xl font-bold font-headline text-foreground mb-4">Our Story</h2>
                     <p className="text-muted-foreground mb-4">
-                        Founded in 2023, ChargeSmart was born from a simple observation: the future of driving is electric, but the charging experience was often fragmented and frustrating. A group of tech enthusiasts and environmental advocates came together with a shared goal: to build an EV charging platform that just works.
+                        Founded in 2025, ChargeSmart was born from a simple observation: the future of driving is electric, but the charging experience was often fragmented and frustrating. A group of tech enthusiasts and environmental advocates came together with a shared goal: to build an EV charging platform that just works.
                     </p>
                     <p className="text-muted-foreground">
                         From a single test charger in Pune, we've grown into a network spanning major Indian cities, powered by cutting-edge AI and a passion for customer satisfaction. We're not just building chargers; we're building the infrastructure for a cleaner tomorrow.
