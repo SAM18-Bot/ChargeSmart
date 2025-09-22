@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bot, Send, X, Loader2, Mic, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { answerUserQuery } from '@/ai/flows/answer-user-queries';
-import { processVoiceCommand } from '@/ai/flows/voice-assistant-flow';
+import { processVoiceCommand, textToSpeech } from '@/ai/flows/voice-assistant-flow';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -18,18 +18,10 @@ import { useToast } from '@/hooks/use-toast';
 interface Message {
   sender: 'user' | 'bot';
   text: string;
+  audio?: string;
 }
 
-export type ChatbotAction = {
-    type: 'INITIATE_PAYMENT' | 'BOOK_SLOT_CONFIRMED' | 'REQUIRE_MORE_INFO' | 'NONE';
-    payload?: any;
-}
-
-interface ChatbotProps {
-    onAction?: (action: ChatbotAction) => void;
-}
-
-export default function Chatbot({ onAction }: ChatbotProps) {
+export default function Chatbot() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +33,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleSend = async (textToSend?: string) => {
     const currentInput = textToSend || input;
@@ -64,7 +57,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     }
   };
 
-  const handleVoiceCommand = async (command: string) => {
+  const handleVoiceCommand = useCallback(async (command: string) => {
     if (command.trim() === '') return;
     const userMessage: Message = { sender: 'user', text: command };
     setMessages((prev) => [...prev, userMessage]);
@@ -77,13 +70,9 @@ export default function Chatbot({ onAction }: ChatbotProps) {
             userName: user?.name || 'User' 
         });
 
-        const botMessage: Message = { sender: 'bot', text: response.response };
+        const botMessage: Message = { sender: 'bot', text: response.response, audio: response.audio };
         setMessages((prev) => [...prev, botMessage]);
         
-        if (response.action && response.action.type !== 'NONE' && onAction) {
-            onAction(response.action);
-        }
-
     } catch (error) {
         console.error('Error processing voice command:', error);
         const errorMessage: Message = { sender: 'bot', text: 'Sorry, I had trouble understanding that. Please try again.' };
@@ -91,9 +80,9 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     } finally {
         setIsLoading(false);
     }
-  }
+  }, [language, user]);
 
-  const startRecording = () => {
+  const startRecording = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ variant: 'destructive', title: "Unsupported Browser", description: "Your browser does not support Speech Recognition. Please try Chrome."});
@@ -131,7 +120,7 @@ export default function Chatbot({ onAction }: ChatbotProps) {
     };
 
     recognition.start();
-  };
+  }, [handleVoiceCommand, language, toast]);
 
   const stopRecording = () => {
     if (recognitionRef.current) {
@@ -147,7 +136,6 @@ export default function Chatbot({ onAction }: ChatbotProps) {
       }
   }
 
-
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'smooth' });
@@ -156,18 +144,43 @@ export default function Chatbot({ onAction }: ChatbotProps) {
 
   useEffect(() => {
     if (isOpen) {
-      setMessages([{ sender: 'bot', text: 'Hello! How can I help you with your EV charging today? You can ask me questions or use the mic to book a slot.' }]);
+        const welcomeText = "Hello! How can I help you with your EV charging today? You can ask me questions or use the mic for voice commands.";
+        setIsLoading(true);
+        textToSpeech({text: welcomeText}).then(response => {
+            setMessages([{ sender: 'bot', text: welcomeText, audio: response.audio }]);
+        }).catch(err => {
+             setMessages([{ sender: 'bot', text: welcomeText }]);
+             console.error("Error generating welcome speech", err);
+        }).finally(() => {
+            setIsLoading(false);
+        });
     } else {
         // Stop recording if it's active when closing the chatbot
         if (isRecording) {
             stopRecording();
         }
+        // Stop any playing audio
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+  
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.sender === 'bot' && lastMessage.audio) {
+      if (audioRef.current) {
+        audioRef.current.src = lastMessage.audio;
+        audioRef.current.play().catch(e => console.error("Audio playback failed", e));
+      }
+    }
+  }, [messages]);
 
   return (
     <>
+      <audio ref={audioRef} />
       <div className="fixed bottom-6 right-6 z-50">
         <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
           <Button

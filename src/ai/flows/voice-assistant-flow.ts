@@ -11,7 +11,34 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { chargers, evs } from '@/lib/data';
 import { format } from 'date-fns';
+import wav from 'wav';
 
+async function toWav(
+    pcmData: Buffer,
+    channels = 1,
+    rate = 24000,
+    sampleWidth = 2
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const writer = new wav.Writer({
+        channels,
+        sampleRate: rate,
+        bitDepth: sampleWidth * 8,
+      });
+  
+      let bufs = [] as any[];
+      writer.on('error', reject);
+      writer.on('data', function (d) {
+        bufs.push(d);
+      });
+      writer.on('end', function () {
+        resolve(Buffer.concat(bufs).toString('base64'));
+      });
+  
+      writer.write(pcmData);
+      writer.end();
+    });
+  }
 
 const VoiceCommandInputSchema = z.object({
   command: z.string().describe('The user\'s voice command.'),
@@ -22,12 +49,46 @@ export type VoiceCommandInput = z.infer<typeof VoiceCommandInputSchema>;
 
 const VoiceCommandOutputSchema = z.object({
     response: z.string().describe('The assistant\'s response to the user.'),
+    audio: z.string().optional().describe('The base64 encoded WAV audio of the response.'),
 });
 export type VoiceCommandOutput = z.infer<typeof VoiceCommandOutputSchema>;
 
 export async function processVoiceCommand(input: VoiceCommandInput): Promise<VoiceCommandOutput> {
   return voiceAssistantFlow(input);
 }
+
+const TextToSpeechInputSchema = z.object({
+    text: z.string(),
+});
+type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
+
+const TextToSpeechOutputSchema = z.object({
+    audio: z.string(),
+});
+type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
+
+export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
+    const { media } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash-preview-tts',
+        config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName: 'Algenib' },
+                },
+            },
+        },
+        prompt: input.text,
+    });
+    if (!media) {
+        throw new Error('no media returned');
+    }
+    const audioBuffer = Buffer.from(media.url.substring(media.url.indexOf(',') + 1), 'base64');
+    return {
+        audio: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
+    };
+}
+
 
 const prompt = ai.definePrompt({
   name: 'voiceAssistantPrompt',
@@ -66,9 +127,12 @@ const voiceAssistantFlow = ai.defineFlow(
         response: "I'm sorry, I didn't understand that. Could you please try again?",
       };
     }
+    
+    const audioResponse = await textToSpeech({ text: output.response });
 
     return {
         response: output.response,
+        audio: audioResponse.audio,
     };
   }
 );
