@@ -21,9 +21,11 @@ import { Card, CardContent } from '../ui/card';
 interface AiAssistantDialogProps {
   evs: EV[];
   chargers: Charger[];
+  pricePerKwh: number;
+  chargerPower: number;
 }
 
-export function AiAssistantDialog({ evs, chargers }: AiAssistantDialogProps) {
+export function AiAssistantDialog({ evs, chargers, pricePerKwh, chargerPower }: AiAssistantDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedEv, setSelectedEv] = useState('');
   const [battery, setBattery] = useState('');
@@ -42,7 +44,8 @@ export function AiAssistantDialog({ evs, chargers }: AiAssistantDialogProps) {
         evModel: selectedEv,
         batteryPercentage: parseInt(battery, 10),
         chargingStationOptions: chargers.map(c => c.id),
-        pricing: 15, // Mock price
+        pricing: pricePerKwh,
+        chargerPower: chargerPower,
       });
       setResult(response);
     } catch (err) {
