@@ -275,7 +275,7 @@ export default function Chatbot() {
                             onClick={toggleRecording}
                             className={cn(
                                 "rounded-full w-10 h-10 p-0",
-                                isRecording ? "bg-red-500 hover:bg-red-600" : "bg-primary"
+                                isRecording ? "bg-blue-500 hover:bg-blue-600" : "bg-primary"
                             )}
                             aria-label={isRecording ? 'Stop recording' : 'Start recording'}
                         >

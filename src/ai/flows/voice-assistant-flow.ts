@@ -69,7 +69,7 @@ type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
 
 export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
     const { media } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-preview-tts',
+        model: 'googleai/gemini-2.5-flash-preview-tts',
         config: {
             responseModalities: ['AUDIO'],
             speechConfig: {
