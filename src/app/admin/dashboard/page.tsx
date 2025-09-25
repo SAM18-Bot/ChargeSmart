@@ -46,11 +46,13 @@ export default function AdminDashboardPage() {
     const stream = videoRef.current?.srcObject as MediaStream;
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
-      videoRef.current!.srcObject = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
     }
     setScannerOpen(false);
     setScannedData(null);
-    setHasCameraPermission(null);
+    setHasCameraPermission(null); // Reset permission state
   };
   
   const handleScanSuccess = (result: QrScanner.ScanResult) => {
@@ -72,7 +74,7 @@ export default function AdminDashboardPage() {
     if (String(error).includes('Permission denied')) {
         setHasCameraPermission(false);
     } else if (error !== 'No QR code found.') {
-        toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "An unexpected error occurred." });
+        // toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "An unexpected error occurred." });
     }
   };
 
@@ -81,49 +83,44 @@ export default function AdminDashboardPage() {
       const videoElem = videoRef.current;
       if (!videoElem) return;
 
-      const getCameraPermissionAndStartScanner = async () => {
-          try {
-              // Check for permission without prompting, if possible
-              const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
-              if (permissionStatus.state === 'denied') {
-                  setHasCameraPermission(false);
-                  return;
-              }
+      const initializeScanner = async () => {
+        try {
+          // Request permission
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          setHasCameraPermission(true);
 
-              const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
-              videoElem.srcObject = stream;
-              setHasCameraPermission(true);
-
-              scannerRef.current = new QrScanner(
-                  videoElem,
-                  handleScanSuccess,
-                  {
-                    onDecodeError: handleScanError,
-                    highlightScanRegion: true,
-                    highlightCodeOutline: true,
-                  }
-                );
-              await scannerRef.current.start();
-
-          } catch (err) {
-              setHasCameraPermission(false);
-              console.error('Error accessing camera:', err);
+          if (videoElem) {
+            videoElem.srcObject = stream;
           }
+
+          // Important: Create scanner instance only after stream is set
+          scannerRef.current = new QrScanner(
+            videoElem,
+            handleScanSuccess,
+            {
+              onDecodeError: handleScanError,
+              highlightScanRegion: true,
+              highlightCodeOutline: true,
+            }
+          );
+          await scannerRef.current.start();
+        } catch (err: any) {
+          console.error('Error accessing camera:', err);
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            setHasCameraPermission(false);
+          } else {
+             toast({ variant: 'destructive', title: "Camera Error", description: "Could not start the camera. Please check your device."});
+          }
+        }
       };
 
-      getCameraPermissionAndStartScanner();
+      initializeScanner();
 
       return () => {
-        if (scannerRef.current) {
-          scannerRef.current.stop();
-          scannerRef.current.destroy();
-          scannerRef.current = null;
-        }
-        if (videoElem.srcObject) {
-          (videoElem.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-        }
+        stopScanner();
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScannerOpen]);
 
 
@@ -218,18 +215,22 @@ export default function AdminDashboardPage() {
                 <DialogDescription>Point the camera at the QR code on the user's device.</DialogDescription>
             </DialogHeader>
             <div className='bg-muted rounded-md overflow-hidden aspect-video relative flex items-center justify-center'>
-                <video ref={videoRef} className={hasCameraPermission ? 'w-full h-full object-cover' : 'hidden'} autoPlay muted playsInline />
+                <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
                 {hasCameraPermission === false && (
-                    <Alert variant="destructive" className="m-4">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Camera Access Required</AlertTitle>
-                      <AlertDescription>
-                        Please grant camera permissions in your browser settings to use the scanner. You may need to reload the page after changing permissions.
-                      </AlertDescription>
-                    </Alert>
+                    <div className='absolute inset-0 flex items-center justify-center p-4'>
+                        <Alert variant="destructive" >
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Camera Access Required</AlertTitle>
+                          <AlertDescription>
+                            Please grant camera permissions in your browser settings to use the scanner. You may need to reload the page after changing permissions.
+                          </AlertDescription>
+                        </Alert>
+                    </div>
                 )}
                  {hasCameraPermission === null && (
-                    <p>Requesting camera access...</p>
+                    <div className='absolute inset-0 flex items-center justify-center p-4'>
+                      <p>Requesting camera access...</p>
+                    </div>
                  )}
             </div>
             <DialogFooter>
@@ -279,3 +280,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+    
