@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserShield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const GoogleIcon = () => (
@@ -176,6 +176,12 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
+             <div className="mt-8 text-center">
+                <Link href="/admin/login" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <UserShield className="h-4 w-4" />
+                    Charging Station Admin Login
+                </Link>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
