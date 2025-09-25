@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserShield } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function AdminLoginPage() {
@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
         <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 p-3 bg-primary rounded-full text-primary-foreground">
-              <UserShield className="h-8 w-8" />
+              <Shield className="h-8 w-8" />
             </div>
             <CardTitle className="text-3xl font-headline text-primary">Admin Portal</CardTitle>
             <CardDescription>Sign in to manage your station</CardDescription>
