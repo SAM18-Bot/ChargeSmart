@@ -27,29 +27,40 @@ const FloatingParticles = () => (
 );
 
 const NetworkAnimation = () => {
-  const nodes = [...Array(12)].map((_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: 4 + Math.random() * 4,
-    delay: Math.random() * 3
-  }));
+  const [nodes, setNodes] = useState<{ id: number; x: number; y: number; size: number; delay: number; }[]>([]);
+  const [connections, setConnections] = useState<{ from: any; to: any; opacity: number; }[]>([]);
 
-  const connections: { from: typeof nodes[0], to: typeof nodes[0], opacity: number }[] = [];
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const distance = Math.sqrt(
-        Math.pow(nodes[i].x - nodes[j].x, 2) + 
-        Math.pow(nodes[i].y - nodes[j].y, 2)
-      );
-      if (distance < 35) {
-        connections.push({
-          from: nodes[i],
-          to: nodes[j],
-          opacity: Math.max(0.1, 1 - distance / 35)
-        });
+  useEffect(() => {
+    const generatedNodes = [...Array(12)].map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 4 + Math.random() * 4,
+      delay: Math.random() * 3
+    }));
+
+    const generatedConnections: { from: typeof generatedNodes[0], to: typeof generatedNodes[0], opacity: number }[] = [];
+    for (let i = 0; i < generatedNodes.length; i++) {
+      for (let j = i + 1; j < generatedNodes.length; j++) {
+        const distance = Math.sqrt(
+          Math.pow(generatedNodes[i].x - generatedNodes[j].x, 2) + 
+          Math.pow(generatedNodes[i].y - generatedNodes[j].y, 2)
+        );
+        if (distance < 35) {
+          generatedConnections.push({
+            from: generatedNodes[i],
+            to: generatedNodes[j],
+            opacity: Math.max(0.1, 1 - distance / 35)
+          });
+        }
       }
     }
+    setNodes(generatedNodes);
+    setConnections(generatedConnections);
+  }, []);
+
+  if (nodes.length === 0) {
+    return null;
   }
 
   return (
@@ -483,6 +494,12 @@ const UserJourneyAnimation = () => {
 };
 
 export default function ChargeSmart() {
+    const [isClient, setIsClient] = useState(false)
+
+    useEffect(() => {
+        setIsClient(true)
+    }, [])
+
     return (
         <div className="min-h-screen relative overflow-hidden bg-gray-900">
             <style jsx>{`
@@ -599,8 +616,10 @@ export default function ChargeSmart() {
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/80 via-cyan-500/75 to-teal-400/70"></div>
             </div>
-            <NetworkAnimation />
-            <FloatingParticles />
+            {isClient && <>
+                <NetworkAnimation />
+                <FloatingParticles />
+            </>}
             
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-black/30 backdrop-blur-lg">
@@ -795,3 +814,4 @@ export default function ChargeSmart() {
 }
 
     
+
