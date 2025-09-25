@@ -40,7 +40,7 @@ export default function LandingPage() {
             <Button variant="ghost" asChild>
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild className="bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold">
+            <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold">
               <Link href="/register">Sign Up</Link>
             </Button>
           </div>
@@ -71,7 +71,7 @@ export default function LandingPage() {
               Find, book, and manage your EV charging sessions with ease. ChargeSmart is the intelligent way to power your journey.
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="lg" asChild className="bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold">
+              <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold">
                 <Link href="/register">
                   Get Started for Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

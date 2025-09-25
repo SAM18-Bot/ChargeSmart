@@ -153,7 +153,7 @@ export default function HistoryPage() {
                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
                   <h3 className="text-xl font-semibold text-muted-foreground">No History Found</h3>
                   <p className="text-muted-foreground mt-2">You haven't charged with us yet. Your sessions will appear here.</p>
-                  <Button asChild className="mt-4">
+                  <Button asChild className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground">
                     <Link href="/">Find a Charger</Link>
                   </Button>
                 </div>

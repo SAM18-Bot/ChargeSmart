@@ -99,7 +99,7 @@ export function AiAssistantDialog({ evs, chargers, pricePerKwh, chargerPower }: 
                 required
               />
             </div>
-            <Button type="submit" disabled={isLoading || !selectedEv || !battery}>
+            <Button type="submit" disabled={isLoading || !selectedEv || !battery} className="bg-accent hover:bg-accent/90 text-accent-foreground">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? 'Optimizing...' : 'Get Suggestion'}
             </Button>
@@ -129,7 +129,7 @@ export function AiAssistantDialog({ evs, chargers, pricePerKwh, chargerPower }: 
                 </div>
               </CardContent>
             </Card>
-            <Button onClick={() => { setResult(null); setSelectedEv(''); setBattery(''); }} className="w-full">
+            <Button onClick={() => { setResult(null); setSelectedEv(''); setBattery(''); }} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
               Optimize Again
             </Button>
           </div>

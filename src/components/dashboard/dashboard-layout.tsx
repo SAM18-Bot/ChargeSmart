@@ -560,7 +560,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleSmartChargeRequest} disabled={!selectedCharger || !selectedEvModel || !batteryPercentage}>Proceed to Payment</Button>
+                        <Button onClick={handleSmartChargeRequest} disabled={!selectedCharger || !selectedEvModel || !batteryPercentage} className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
                 <TabsContent value="direct">
@@ -600,7 +600,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount || isNaN(kwhValue)}>Proceed to Payment</Button>
+                        <Button onClick={handleDirectChargeRequest} disabled={!selectedCharger || !kwhAmount || isNaN(kwhValue)} className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
                 <TabsContent value="book">
@@ -630,7 +630,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleBooking} disabled={!selectedCharger || !bookingDate || !bookingTime}>Book Slot</Button>
+                        <Button onClick={handleBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Book Slot</Button>
                     </DialogFooter>
                 </TabsContent>
               </Tabs>
@@ -650,7 +650,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 <p className="text-5xl font-bold font-headline text-primary">₹{pendingCharge?.cost.toFixed(2)}</p>
             </div>
             <DialogFooter>
-                <Button className="w-full" onClick={handlePayment}>Pay with Razorpay</Button>
+                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handlePayment}>Pay with Razorpay</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -669,7 +669,7 @@ export default function DashboardLayout({ user }: { user: User }) {
               </div>
               <DialogFooter>
                   <Button variant="outline" onClick={() => { setQrModalOpen(false); setQrCodeData(null); }}>Close</Button>
-                  <Button onClick={() => window.print()}>Print Ticket</Button>
+                  <Button onClick={() => window.print()} className="bg-accent hover:bg-accent/90 text-accent-foreground">Print Ticket</Button>
               </DialogFooter>
           </DialogContent>
       </Dialog>

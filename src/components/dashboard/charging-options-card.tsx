@@ -20,7 +20,7 @@ export function ChargingOptionsCard({ title, description, onClick }: ChargingOpt
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardFooter>
-          <Button onClick={onClick} className="w-full">
+          <Button onClick={onClick} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
             Select <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>
