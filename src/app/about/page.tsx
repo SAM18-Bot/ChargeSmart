@@ -152,10 +152,10 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Developer</h2>
             <div className="flex justify-center">
               <TeamMemberCard 
-                name="Sameer Bansode" 
+                name="John Doe" 
                 role="Developer" 
                 imageUrl={developerPortrait.src} 
-                alt={developerPortrait.alt}
+                alt="Portrait of the developer"
                 hint={developerPortrait.hint}
                 />
             </div>
@@ -176,7 +176,7 @@ export default function AboutPage() {
                  <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
                     Have questions, feedback, or a partnership inquiry? We'd love to hear from you. Reach out to our team, and we'll get back to you as soon as possible.
                  </p>
-                 <a href="mailto:sameerbansode001@gmail.com" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90">
+                 <a href="mailto:support@example.com" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90">
                     <Mail className="mr-3 h-5 w-5" />
                     Contact Us
                 </a>

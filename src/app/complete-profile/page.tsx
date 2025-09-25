@@ -96,7 +96,7 @@ export default function CompleteProfilePage() {
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="e.g., Sameer Bansode"
+                  placeholder="e.g., John Doe"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}

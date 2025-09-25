@@ -69,9 +69,11 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
                 <span>History</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="focus:bg-transparent cursor-default">
-              <LifeBuoy className="mr-2 h-4 w-4" />
-              <span>sameerbansode001@gmail.com</span>
+            <DropdownMenuItem asChild>
+              <Link href="/about#contact">
+                <LifeBuoy className="mr-2 h-4 w-4" />
+                <span>Support</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
