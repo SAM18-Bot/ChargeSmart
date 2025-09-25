@@ -15,11 +15,13 @@ import { LogOut, QrCode, Zap, Clock, User, Bell, AlertTriangle } from 'lucide-re
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { CHARGER_POWER_KW } from '@/components/dashboard/dashboard-layout';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboardPage() {
   const { admin, adminLogout } = useAuth();
   const { bookings, activateBooking } = useBookings();
   const { toast } = useToast();
+  const router = useRouter();
   
   const [isScannerOpen, setScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState<any | null>(null);
@@ -28,25 +30,23 @@ export default function AdminDashboardPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
 
-  const stationBookings = bookings.filter(b => b.chargerId === admin?.stationId);
+  // Filter bookings for the admin's specific station
+  const stationBookings = admin ? bookings.filter(b => b.chargerId === admin.stationId) : [];
 
-  const startScanner = async () => {
-    try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-        setScannerOpen(true);
-    } catch (error) {
-        console.error('Camera permission denied:', error);
-        setHasCameraPermission(false);
-        setScannerOpen(true); // Open the dialog to show the error message
-    }
+  const startScanner = () => {
+    setScannerOpen(true);
   };
-
+  
   const stopScanner = () => {
     if (scannerRef.current) {
       scannerRef.current.stop();
       scannerRef.current.destroy();
       scannerRef.current = null;
+    }
+    const stream = videoRef.current?.srcObject as MediaStream;
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current!.srcObject = null;
     }
     setScannerOpen(false);
     setScannedData(null);
@@ -69,48 +69,62 @@ export default function AdminDashboardPage() {
 
   const handleScanError = (error: any) => {
     console.error(error);
-    if (error !== 'No QR code found.') {
-        toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "An unexpected error occurred with the scanner." });
+    if (String(error).includes('Permission denied')) {
+        setHasCameraPermission(false);
+    } else if (error !== 'No QR code found.') {
+        toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "An unexpected error occurred." });
     }
   };
 
   useEffect(() => {
-    let stream: MediaStream;
-    const setupScanner = async () => {
-        if (isScannerOpen && hasCameraPermission && videoRef.current) {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                videoRef.current.srcObject = stream;
-                
-                scannerRef.current = new QrScanner(
-                    videoRef.current,
-                    handleScanSuccess,
-                    {
-                      onDecodeError: handleScanError,
-                      highlightScanRegion: true,
-                      highlightCodeOutline: true,
-                    }
-                  );
-                await scannerRef.current.start();
-            } catch (err) {
-                 handleScanError(err);
-                 setHasCameraPermission(false);
-            }
-        }
-    }
-    
-    setupScanner();
+    if (isScannerOpen) {
+      const videoElem = videoRef.current;
+      if (!videoElem) return;
 
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop();
-        scannerRef.current.destroy();
-      }
-       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [isScannerOpen, hasCameraPermission]);
+      const getCameraPermissionAndStartScanner = async () => {
+          try {
+              // Check for permission without prompting, if possible
+              const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+              if (permissionStatus.state === 'denied') {
+                  setHasCameraPermission(false);
+                  return;
+              }
+
+              const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
+              videoElem.srcObject = stream;
+              setHasCameraPermission(true);
+
+              scannerRef.current = new QrScanner(
+                  videoElem,
+                  handleScanSuccess,
+                  {
+                    onDecodeError: handleScanError,
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                  }
+                );
+              await scannerRef.current.start();
+
+          } catch (err) {
+              setHasCameraPermission(false);
+              console.error('Error accessing camera:', err);
+          }
+      };
+
+      getCameraPermissionAndStartScanner();
+
+      return () => {
+        if (scannerRef.current) {
+          scannerRef.current.stop();
+          scannerRef.current.destroy();
+          scannerRef.current = null;
+        }
+        if (videoElem.srcObject) {
+          (videoElem.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+        }
+      };
+    }
+  }, [isScannerOpen]);
 
 
   const confirmChargeStart = () => {
@@ -123,15 +137,16 @@ export default function AdminDashboardPage() {
     if (activated) {
       toast({ title: "Charge Started!", description: `Session for ${scannedData.user} has begun.` });
     } else {
-      toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found or already active." });
+      toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found or already active for this station." });
     }
     setScannedData(null);
   };
   
   if (!admin) {
+    // This state should ideally not be reached because of AuthWrapper, but it's good practice.
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Loading admin data...</p>
+        <p>Loading admin data or redirecting...</p>
       </div>
     );
   }
@@ -187,7 +202,7 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">No bookings found.</TableCell>
+                    <TableCell colSpan={5} className="text-center h-24">No bookings found for this station.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -196,20 +211,20 @@ export default function AdminDashboardPage() {
         </Card>
       </main>
       
-      <Dialog open={isScannerOpen} onOpenChange={stopScanner}>
-        <DialogContent>
+      <Dialog open={isScannerOpen} onOpenChange={setScannerOpen}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={stopScanner}>
             <DialogHeader>
                 <DialogTitle>Scan User Ticket</DialogTitle>
                 <DialogDescription>Point the camera at the QR code on the user's device.</DialogDescription>
             </DialogHeader>
             <div className='bg-muted rounded-md overflow-hidden aspect-video relative flex items-center justify-center'>
-                <video ref={videoRef} className={hasCameraPermission ? 'w-full h-full object-cover' : 'hidden'} />
+                <video ref={videoRef} className={hasCameraPermission ? 'w-full h-full object-cover' : 'hidden'} autoPlay muted playsInline />
                 {hasCameraPermission === false && (
                     <Alert variant="destructive" className="m-4">
                       <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Camera Access Denied</AlertTitle>
+                      <AlertTitle>Camera Access Required</AlertTitle>
                       <AlertDescription>
-                        Please enable camera permissions in your browser settings to use the scanner. You may need to reload the page after granting access.
+                        Please grant camera permissions in your browser settings to use the scanner. You may need to reload the page after changing permissions.
                       </AlertDescription>
                     </Alert>
                 )}
@@ -264,5 +279,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
