@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import Header from '@/components/dashboard/header';
 import ChargerCard from '@/components/dashboard/charger-card';
 import { MapView } from '@/components/dashboard/map-view';
 import { chargers as initialChargers, evs as initialEvs } from '@/lib/data';
-import type { Charger, EV, User, QueueItem, ChargingHistory } from '@/lib/types';
+import type { Charger, EV, User, QueueItem, ChargingHistory, Booking } from '@/lib/types';
 import { AiAssistantDialog } from './ai-assistant-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -24,7 +25,7 @@ import { ChargingOptionsCard } from './charging-options-card';
 import { Slider } from '../ui/slider';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Calculator, Zap, CalendarClock } from 'lucide-react';
+import { useBookings } from '@/contexts/booking-context';
 
 declare global {
     interface Window {
@@ -35,7 +36,7 @@ declare global {
 }
 
 const PRICE_PER_KWH = 18; // Rupees per kWh
-const CHARGER_POWER_KW = 22; // kW
+export const CHARGER_POWER_KW = 22; // kW
 
 export interface PendingCharge {
     charger: Charger;
@@ -61,7 +62,7 @@ const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 export default function DashboardLayout({ user }: { user: User }) {
-  const [chargers, setChargers] = useState<Charger[]>(initialChargers);
+  const { chargers, setChargers, addBooking } = useBookings();
   const [nearestChargers, setNearestChargers] = useState<Charger[]>([]);
   const [evs] = useState<EV[]>(initialEvs);
   const [isChargeModalOpen, setChargeModalOpen] = useState(false);
@@ -145,49 +146,9 @@ export default function DashboardLayout({ user }: { user: User }) {
             }
             return c;
         });
-
-        // Simulate queue progression
-        setTimeout(() => {
-            advanceQueue(chargerId);
-        }, 30000); // Check queue every 30 seconds
-
         return newChargers;
     });
   };
-
-  const advanceQueue = (chargerId: string) => {
-    setChargers(prevChargers => {
-        const charger = prevChargers.find(c => c.id === chargerId);
-        if (charger && charger.status === 'Available' && charger.queue.length > 0) {
-            const nextUser = charger.queue[0];
-            
-            // Notify next user
-            if (nextUser.user.id === user.id) {
-                toast({
-                    title: "It's your turn!",
-                    description: `The charger ${charger.name} is now available for you.`,
-                });
-            }
-
-            // In a real app, you'd have a more robust system for this.
-            // For now, we just open the charge modal for the user if it's their turn.
-            if (nextUser.user.id === user.id) {
-               handleOpenChargeModal(chargerId);
-            }
-            
-            return prevChargers.map(c => {
-                if (c.id === chargerId) {
-                    return {
-                        ...c,
-                        // The user will be removed from queue once they start charging
-                    };
-                }
-                return c;
-            });
-        }
-        return prevChargers;
-    });
-  }
 
 
   const initiatePayment = (chargeDetails: PendingCharge) => {
@@ -238,19 +199,35 @@ export default function DashboardLayout({ user }: { user: User }) {
     });
   }
 
-  const handleBooking = () => {
+  const handleTimeSlotBooking = () => {
     if (!selectedCharger || !bookingDate || !bookingTime) return;
 
     const [hours, minutes] = bookingTime.split(':').map(Number);
     const bookingStart = set(bookingDate, { hours, minutes });
     
+    const booking: Booking = {
+      id: `booking-${Date.now()}`,
+      chargerId: selectedCharger.id,
+      userId: user.id,
+      userName: user.name,
+      date: bookingStart,
+      kwh: 0, // Not determined yet
+      cost: 0, // Not determined yet
+      status: 'pending',
+    };
+
+    addBooking(booking);
+
     toast({
         title: "Slot Booked!",
-        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}. If you're late, your booking may be extended if the next slot is free, otherwise a 50% cancellation fee will apply.`,
+        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}. A QR ticket will be generated upon payment.`,
         duration: 9000,
     });
     
-    closeAndResetModal();
+    // For simplicity, we'll use the direct charge flow for payment after booking.
+    setActiveTab('direct');
+    setChargeModalOpen(true);
+    // Don't close and reset yet, let them choose kWh amount.
   }
 
   const closeAndResetModal = () => {
@@ -287,10 +264,10 @@ export default function DashboardLayout({ user }: { user: User }) {
           setPaymentModalOpen(false);
           toast({
             title: "Payment Successful!",
-            description: `Your transaction is complete. Starting your charge now.`,
+            description: `Your booking is confirmed. Please present the QR ticket at the station.`,
           });
           
-          startChargingSession(pendingCharge, response.razorpay_payment_id);
+          createPendingBooking(pendingCharge, response.razorpay_payment_id);
           generateQrTicket(pendingCharge, response.razorpay_payment_id);
         },
         prefill: { name: user.name, email: user.email },
@@ -320,64 +297,30 @@ export default function DashboardLayout({ user }: { user: User }) {
     }
   }
 
-  const startChargingSession = (chargeDetails: PendingCharge, transactionId: string) => {
-      const chargeTimeMinutes = Math.round((chargeDetails.kwh / CHARGER_POWER_KW) * 60);
-      const chargeEndTime = add(new Date(), { minutes: chargeTimeMinutes });
+  const createPendingBooking = (chargeDetails: PendingCharge, transactionId: string) => {
+    const booking: Booking = {
+        id: transactionId,
+        chargerId: chargeDetails.charger.id,
+        userId: user.id,
+        userName: user.name,
+        kwh: chargeDetails.kwh,
+        cost: chargeDetails.cost,
+        date: new Date(),
+        status: 'pending',
+    };
+    addBooking(booking);
+};
 
-      setChargers(prevChargers => prevChargers.map(c => {
-        if (c.id === chargeDetails.charger.id) {
-          // Remove user from queue if they were in it
-          const newQueue = c.queue.filter(item => item.user.id !== user.id);
-          
-          const newChargerState: Charger = {
-            ...c,
-            status: 'Occupied',
-            currentUser: user,
-            currentVehicle: chargeDetails.type === 'smart' 
-                ? { model: chargeDetails.evModel!, batteryPercentage: chargeDetails.batteryPercentage! }
-                : { model: 'Direct kWh Charge' },
-            kwhReserved: chargeDetails.kwh,
-            startTime: new Date(),
-            estimatedEndTime: chargeEndTime,
-            queue: newQueue,
-          };
-
-          // Save to history
-          const historyEntry: ChargingHistory = {
-            id: transactionId,
-            chargerName: newChargerState.name,
-            date: new Date(),
-            kwhCharged: chargeDetails.kwh,
-            cost: chargeDetails.cost,
-            durationMinutes: chargeTimeMinutes,
-          };
-
-          const existingHistory: ChargingHistory[] = JSON.parse(localStorage.getItem('chargingHistory') || '[]').map((item: any) => ({ ...item, date: new Date(item.date) }));
-          const updatedHistory = [...existingHistory, historyEntry];
-          localStorage.setItem('chargingHistory', JSON.stringify(updatedHistory));
-
-
-          // Simulate charger becoming free later
-          setTimeout(() => {
-            setChargers(prev => prev.map(ch => ch.id === chargeDetails.charger.id ? { ...ch, status: 'Available', currentUser: undefined, currentVehicle: undefined, startTime: undefined, estimatedEndTime: undefined } : ch))
-            advanceQueue(chargeDetails.charger.id);
-          }, chargeTimeMinutes * 60000); // convert minutes to ms
-
-          return newChargerState;
-        }
-        return c;
-      }));
-  }
 
   const generateQrTicket = async (chargeDetails: PendingCharge, transactionId: string) => {
     const ticketData = {
-      charger: chargeDetails.charger.name,
+      bookingId: transactionId,
+      chargerId: chargeDetails.charger.id,
       user: user.name,
       email: user.email,
       kwh: chargeDetails.kwh,
       amount: chargeDetails.cost.toFixed(2),
       date: format(new Date(), "PPpp"),
-      transactionId,
     };
 
     try {
@@ -635,7 +578,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Book Slot</Button>
+                        <Button onClick={handleTimeSlotBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Book Slot</Button>
                     </DialogFooter>
                 </TabsContent>
               </Tabs>

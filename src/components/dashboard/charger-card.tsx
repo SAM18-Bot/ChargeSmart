@@ -1,12 +1,12 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Charger, User } from '@/lib/types';
-import { Zap, Users, BatteryCharging, Hourglass } from 'lucide-react';
+import { Zap, Users, BatteryCharging, Hourglass, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -29,16 +29,23 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
     return 'approx. 45 mins';
   };
 
-  const getBadgeVariant = (status: 'Available' | 'Occupied') => {
+  const getBadgeVariant = (status: Charger['status']) => {
     switch (status) {
       case 'Available':
         return 'bg-green-500 text-white';
       case 'Occupied':
         return 'bg-yellow-500 text-black';
+      case 'Booked':
+        return 'bg-blue-500 text-white';
       default:
         return 'secondary';
     }
   };
+
+  const canCharge = charger.status === 'Available';
+  const canJoinQueue = charger.status !== 'Available';
+  const isDisabled = isCurrentUserCharging || isCurrentUserInQueue;
+
 
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -56,26 +63,30 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
               <p className="text-muted-foreground">Ready for your EV.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Avatar>
-                  <AvatarFallback className="bg-primary text-primary-foreground" aria-label={`Avatar for ${charger.currentUser?.name}`}>{charger.currentUser?.name.charAt(0)}</AvatarFallback>
+                   {charger.currentUser ? (
+                     <AvatarFallback className="bg-primary text-primary-foreground" aria-label={`Avatar for ${charger.currentUser.name}`}>{charger.currentUser.name.charAt(0)}</AvatarFallback>
+                   ) : (
+                     <AvatarFallback><Ban /></AvatarFallback>
+                   )}
                 </Avatar>
                 <div>
-                    <p className="font-semibold">{charger.currentUser?.name}</p>
-                    <p className="text-sm text-muted-foreground">{charger.currentVehicle?.model}</p>
+                    <p className="font-semibold">{charger.currentUser?.name || 'Occupied'}</p>
+                    <p className="text-sm text-muted-foreground">{charger.currentVehicle?.model || (charger.status === 'Booked' ? 'Awaiting user...' : '')}</p>
                 </div>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <BatteryCharging className="mr-2 h-4 w-4 text-primary" />
-                <span>Charging in progress...</span>
+                <span>{charger.status === 'Occupied' ? 'Charging in progress...' : 'Charger is reserved'}</span>
               </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />
-                <span>
-                  Free {getTimeRemaining()}
-                </span>
-              </div>
+              {charger.estimatedEndTime && (
+                 <div className="flex items-center text-sm text-muted-foreground">
+                    <Hourglass className="mr-2 h-4 w-4 text-yellow-500" />
+                    <span>Free {getTimeRemaining()}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -103,28 +114,25 @@ export default function ChargerCard({ charger, onCharge, onJoinQueue, currentUse
         </div>
         
         <div className="mt-6">
-          {charger.status === 'Available' ? (
-            <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" onClick={() => onCharge(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
-              Charge Now
-            </Button>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="w-full">
-                    <Button variant="outline" className="w-full" onClick={() => onJoinQueue(charger.id)} disabled={isCurrentUserCharging || isCurrentUserInQueue}>
-                      Join Queue
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                {(isCurrentUserCharging || isCurrentUserInQueue) && 
-                  <TooltipContent>
-                    <p>You are already charging or in a queue.</p>
-                  </TooltipContent>
-                }
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="w-full space-y-2">
+                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" onClick={() => onCharge(charger.id)} disabled={!canCharge || isDisabled}>
+                    Book & Pay
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => onJoinQueue(charger.id)} disabled={!canJoinQueue || isDisabled}>
+                    Join Queue
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {isDisabled && 
+                <TooltipContent>
+                  <p>You are already charging or in a queue.</p>
+                </TooltipContent>
+              }
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardContent>
     </Card>

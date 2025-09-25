@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AuthWrapper } from '@/contexts/auth-wrapper';
@@ -6,6 +7,7 @@ import Script from 'next/script';
 import { PageTransition } from '@/components/page-transition';
 import { ThemeProvider } from '@/contexts/theme-provider';
 import './globals.css';
+import { BookingProvider } from '@/contexts/booking-context';
 
 export const metadata: Metadata = {
   title: 'ChargeSmart',
@@ -34,10 +36,12 @@ export default function RootLayout({
             disableTransitionOnChange
         >
             <AuthProvider>
+              <BookingProvider>
                 <PageTransition>
                   <AuthWrapper>{children}</AuthWrapper>
                   <Toaster />
                 </PageTransition>
+              </BookingProvider>
             </AuthProvider>
         </ThemeProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />

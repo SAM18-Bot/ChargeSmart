@@ -1,9 +1,16 @@
+
 export interface User {
   id: string;
   name: string;
   email: string;
   photoURL?: string;
   contactNumber?: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  stationId: string;
 }
 
 export interface EV {
@@ -26,14 +33,18 @@ export interface Booking {
   chargerId: string;
   userId: string;
   userName: string;
-  startTime: Date;
-  endTime: Date;
+  kwh: number;
+  cost: number;
+  date: Date;
+  status: 'pending' | 'active' | 'completed';
+  chargeStartTime?: Date;
+  chargeEndTime?: Date;
 }
 
 export interface Charger {
   id:string;
   name: string;
-  status: 'Available' | 'Occupied';
+  status: 'Available' | 'Occupied' | 'Booked';
   lat: number;
   lng: number;
   currentUser?: User;

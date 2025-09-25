@@ -3,7 +3,7 @@
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { User as AppUser } from '@/lib/types';
+import type { User as AppUser, AdminUser } from '@/lib/types';
 import { auth } from '@/lib/firebase';
 import { 
   onAuthStateChanged, 
@@ -18,18 +18,22 @@ import {
 
 interface AuthContextType {
   user: AppUser | null;
+  admin: AdminUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string) => Promise<void>;
   updateUserProfile: (profileData: { name: string; contactNumber?: string }) => Promise<void>;
   logout: () => void;
+  adminLogin: (adminId: string, pass: string) => Promise<boolean>;
+  adminLogout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -93,7 +97,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/');
   };
 
-  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, updateUserProfile, logout };
+  // Simulated Admin Auth
+  const adminLogin = async (adminId: string, pass: string) => {
+    // In a real app, you'd verify this against a database.
+    if (adminId === 'admin' && pass === 'password') {
+      const demoAdmin: AdminUser = {
+        id: 'admin01',
+        name: 'Station Admin',
+        stationId: 'CZ-001', // Manages this station
+      };
+      setAdmin(demoAdmin);
+      return true;
+    }
+    return false;
+  };
+
+  const adminLogout = () => {
+    setAdmin(null);
+    router.push('/admin/login');
+  }
+
+
+  const value = { user, admin, loading, signInWithGoogle, signInWithEmail, registerWithEmail, updateUserProfile, logout, adminLogin, adminLogout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

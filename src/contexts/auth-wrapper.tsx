@@ -6,11 +6,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Zap } from 'lucide-react';
 
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/about', '/privacy-policy', '/terms-of-service'];
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/about', '/privacy-policy', '/terms-of-service', '/admin/login'];
 const PROFILE_COMPLETION_ROUTE = '/complete-profile';
+const ADMIN_DASHBOARD_ROUTE = '/admin/dashboard';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, admin, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -19,21 +20,31 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
     const isPublic = PUBLIC_ROUTES.includes(pathname);
     const isProfileCompletion = pathname === PROFILE_COMPLETION_ROUTE;
+    const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/login';
 
+    // Handle Admin routing
+    if (isAdminRoute && !admin) {
+        router.push('/admin/login');
+        return;
+    }
+    if (pathname === '/admin/login' && admin) {
+        router.push(ADMIN_DASHBOARD_ROUTE);
+        return;
+    }
+
+    // Handle User routing
     if (!user && !isPublic) {
       router.push('/login');
     } else if (user) {
-      // If user is new (name is default 'User'), force them to complete profile
       if (user.name === 'User' && !isProfileCompletion) {
         router.push(PROFILE_COMPLETION_ROUTE);
       }
-      // If user has completed profile but is on the completion page, redirect to dashboard
       else if (user.name !== 'User' && isProfileCompletion) {
         router.push('/dashboard');
       }
     }
 
-  }, [user, loading, pathname, router]);
+  }, [user, admin, loading, pathname, router]);
 
   if (loading && !PUBLIC_ROUTES.includes(pathname)) {
     return (
