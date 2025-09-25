@@ -176,6 +176,11 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
+            <p className="mt-4 text-center text-sm">
+              <Link href="/admin/login" className="font-semibold text-primary hover:underline">
+                Charging Station Admin Login
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </motion.div>
