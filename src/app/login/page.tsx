@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -41,12 +42,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
   
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +76,7 @@ export default function LoginPage() {
     }
   };
 
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
         <div className="flex items-center space-x-4">

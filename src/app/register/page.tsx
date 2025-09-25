@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,12 +23,6 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, loading, router]);
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -45,7 +40,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
         <div className="flex items-center space-x-4">
