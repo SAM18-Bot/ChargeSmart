@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useBookings } from '@/contexts/booking-context';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, QrCode, Zap, Clock, User, Bell } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import QrScanner from 'qr-scanner';
 import { CHARGER_POWER_KW } from '@/components/dashboard/dashboard-layout';
 
 export default function AdminDashboardPage() {
@@ -22,55 +21,24 @@ export default function AdminDashboardPage() {
   
   const [isScannerOpen, setScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState<any | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const scannerRef = useRef<QrScanner | null>(null);
   
   const stationBookings = bookings.filter(b => b.chargerId === admin?.stationId);
 
   const startScanner = async () => {
-    if (videoRef.current) {
-      setScannerOpen(true);
-      scannerRef.current = new QrScanner(
-        videoRef.current,
-        (result) => handleScanSuccess(result.data),
-        {
-          onDecodeError: handleScanError,
-          highlightScanRegion: true,
-        }
-      );
-      await scannerRef.current.start();
-    }
+    toast({ variant: 'destructive', title: "Scanner Disabled", description: "The QR scanner functionality is currently unavailable." });
   };
 
   const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.stop();
-      scannerRef.current.destroy();
-      scannerRef.current = null;
-    }
     setScannerOpen(false);
     setScannedData(null);
   };
   
   const handleScanSuccess = (data: string) => {
-    stopScanner();
-    try {
-      const parsedData = JSON.parse(data);
-      if (parsedData.bookingId && parsedData.chargerId) {
-        setScannedData(parsedData);
-      } else {
-        throw new Error("Invalid QR code format.");
-      }
-    } catch (e) {
-      toast({ variant: 'destructive', title: "Invalid QR Code", description: "This is not a valid ChargeSmart ticket." });
-    }
+    // This function is no longer called but is kept for potential future use.
   };
 
   const handleScanError = (error: any) => {
-    if (error.name !== 'NotFoundException') {
-      console.error('QR Scanner Error:', error);
-      toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "Could not read QR code."});
-    }
+    // This function is no longer called but is kept for potential future use.
   };
 
   const confirmChargeStart = () => {
@@ -88,15 +56,6 @@ export default function AdminDashboardPage() {
     setScannedData(null);
   };
   
-  useEffect(() => {
-    // This is to handle stopping the camera when the component unmounts
-    return () => {
-        if (scannerRef.current) {
-            scannerRef.current.destroy();
-        }
-    };
-  }, []);
-
   if (!admin) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -165,15 +124,15 @@ export default function AdminDashboardPage() {
         </Card>
       </main>
       
-      {/* QR Scanner Modal */}
+      {/* QR Scanner Modal (Functionality Removed) */}
       <Dialog open={isScannerOpen} onOpenChange={stopScanner}>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Scan User Ticket</DialogTitle>
-                <DialogDescription>Point the camera at the QR code on the user's device.</DialogDescription>
+                <DialogDescription>The QR code scanner is currently disabled.</DialogDescription>
             </DialogHeader>
-            <div className='bg-muted rounded-md overflow-hidden aspect-video'>
-                <video ref={videoRef} className='w-full h-full object-cover' />
+            <div className='bg-muted rounded-md overflow-hidden aspect-video flex items-center justify-center'>
+                <p className='text-muted-foreground'>Scanner inactive.</p>
             </div>
             <DialogFooter>
                 <Button variant='outline' onClick={stopScanner}>Cancel</Button>
