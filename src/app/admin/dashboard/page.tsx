@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
                 {stationBookings.length > 0 ? stationBookings.map(booking => (
                   <TableRow key={booking.id}>
                     <TableCell className='font-medium'>{booking.userName}</TableCell>
-                    <TableCell>{format(booking.date, 'MMM d, h:mm a')}</TableCell>
+                    <TableCell>{format(new Date(booking.date), 'MMM d, h:mm a')}</TableCell>
                     <TableCell>
                       <Badge variant={booking.status === 'pending' ? 'secondary' : 'default'} className={booking.status === 'active' ? 'bg-green-500' : ''}>
                         {booking.status}
@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
             <DialogHeader>
                 <DialogTitle>Confirm Charge Session</DialogTitle>
                 <DialogDescription>Verify the details below and start the charging session.</DialogDescription>
-            </Header>
+            </DialogHeader>
             {scannedData && (
                 <div className='space-y-4 py-4'>
                     <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
