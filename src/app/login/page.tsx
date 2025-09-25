@@ -43,12 +43,18 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       await signInWithEmail(email, password);
-      router.push('/dashboard');
+      // Let the useEffect handle redirection
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -64,7 +70,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      // Let the useEffect handle redirection
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -76,27 +82,17 @@ export default function LoginPage() {
     }
   };
 
-  if (user) {
-    router.push('/dashboard');
+  if (user || loading) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background">
             <div className="flex items-center space-x-4">
                 <Loader2 className="h-12 w-12 text-primary animate-spin" />
             </div>
-            <p className="mt-4 text-muted-foreground">Redirecting to your dashboard...</p>
+            <p className="mt-4 text-muted-foreground">{user ? 'Redirecting...' : 'Loading...'}</p>
         </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <div className="flex items-center space-x-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4 font-body">

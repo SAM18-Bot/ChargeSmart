@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,6 +27,14 @@ export default function RegisterPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   
   const { toast } = useToast();
+
+  useEffect(() => {
+    // We don't want to redirect if a new user is in the process of completing their profile
+    if (user && !showProfileModal) {
+      router.push('/dashboard');
+    }
+  }, [user, showProfileModal, router]);
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +68,7 @@ export default function RegisterPage() {
             description: "You're all set. Welcome to the dashboard."
         });
         setShowProfileModal(false);
-        router.push('/dashboard');
+        // The useEffect will handle redirection now
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -72,9 +80,8 @@ export default function RegisterPage() {
     }
   }
 
-  // We don't want to redirect if a new user is in the process of completing their profile
+
   if (user && !showProfileModal) {
-    router.push('/dashboard');
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background">
             <div className="flex items-center space-x-4">
