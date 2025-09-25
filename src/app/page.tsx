@@ -62,8 +62,10 @@ export default function LandingPage() {
           <div className="absolute bottom-0 right-0 -z-10 w-64 h-64 bg-primary/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
           <div className="container">
-            <h1 className="text-4xl md:text-6xl font-extrabold font-headline mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary">
-              The Future of EV Charging is Here.
+            <h1 className="text-4xl md:text-6xl font-extrabold font-headline mb-6">
+              <span className="text-primary">The Future of </span>
+              <span className="text-accent">EV Charging</span>
+              <span className="text-primary"> is Here.</span>
             </h1>
             <p className="text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground mb-10">
               Find, book, and manage your EV charging sessions with ease. ChargeSmart is the intelligent way to power your journey.
