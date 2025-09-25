@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import QrScanner from 'qr-scanner';
 import { useAuth } from '@/hooks/use-auth';
 import { useBookings } from '@/contexts/booking-context';
 import { Button } from '@/components/ui/button';
@@ -21,25 +22,67 @@ export default function AdminDashboardPage() {
   
   const [isScannerOpen, setScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState<any | null>(null);
-  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerRef = useRef<QrScanner | null>(null);
+
   const stationBookings = bookings.filter(b => b.chargerId === admin?.stationId);
 
   const startScanner = async () => {
-    toast({ variant: 'destructive', title: "Scanner Disabled", description: "The QR scanner functionality is currently unavailable." });
+    setScannerOpen(true);
   };
 
   const stopScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.stop();
+      scannerRef.current.destroy();
+      scannerRef.current = null;
+    }
     setScannerOpen(false);
     setScannedData(null);
   };
   
-  const handleScanSuccess = (data: string) => {
-    // This function is no longer called but is kept for potential future use.
+  const handleScanSuccess = (result: QrScanner.ScanResult) => {
+    try {
+      const data = JSON.parse(result.data);
+      if (data.bookingId && data.user && data.kwh) {
+        setScannedData(data);
+        stopScanner();
+      } else {
+        toast({ variant: 'destructive', title: "Invalid QR Code", description: "The scanned code is not a valid booking ticket." });
+      }
+    } catch (e) {
+      toast({ variant: 'destructive', title: "Invalid QR Code", description: "Could not read the QR code data." });
+    }
   };
 
   const handleScanError = (error: any) => {
-    // This function is no longer called but is kept for potential future use.
+    console.error(error);
+    toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "Could not initialize QR scanner." });
+    stopScanner();
   };
+
+  useEffect(() => {
+    if (isScannerOpen && videoRef.current) {
+      scannerRef.current = new QrScanner(
+        videoRef.current,
+        handleScanSuccess,
+        {
+          onDecodeError: handleScanError,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      );
+      scannerRef.current.start().catch(handleScanError);
+    }
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop();
+        scannerRef.current.destroy();
+      }
+    };
+  }, [isScannerOpen]);
+
 
   const confirmChargeStart = () => {
     if (!scannedData) return;
@@ -124,15 +167,14 @@ export default function AdminDashboardPage() {
         </Card>
       </main>
       
-      {/* QR Scanner Modal (Functionality Removed) */}
       <Dialog open={isScannerOpen} onOpenChange={stopScanner}>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Scan User Ticket</DialogTitle>
-                <DialogDescription>The QR code scanner is currently disabled.</DialogDescription>
+                <DialogDescription>Point the camera at the QR code on the user's device.</DialogDescription>
             </DialogHeader>
-            <div className='bg-muted rounded-md overflow-hidden aspect-video flex items-center justify-center'>
-                <p className='text-muted-foreground'>Scanner inactive.</p>
+            <div className='bg-muted rounded-md overflow-hidden aspect-video'>
+                <video ref={videoRef} className='w-full h-full object-cover' />
             </div>
             <DialogFooter>
                 <Button variant='outline' onClick={stopScanner}>Cancel</Button>
@@ -140,13 +182,12 @@ export default function AdminDashboardPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Confirmation Modal */}
       <Dialog open={!!scannedData} onOpenChange={() => setScannedData(null)}>
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Confirm Charge Session</DialogTitle>
                 <DialogDescription>Verify the details below and start the charging session.</DialogDescription>
-            </DialogHeader>
+            </Header>
             {scannedData && (
                 <div className='space-y-4 py-4'>
                     <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
