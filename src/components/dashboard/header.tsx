@@ -27,7 +27,7 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-primary/10 bg-background/80 backdrop-blur-sm px-4 md:px-6">
-      <Link href="/" className="flex items-center gap-2">
+      <Link href="/dashboard" className="flex items-center gap-2">
         <Logo />
         <span className="text-xl font-bold font-headline tracking-tighter text-primary">ChargeSmart</span>
       </Link>

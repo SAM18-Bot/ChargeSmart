@@ -24,7 +24,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [user, loading, router]);
 
@@ -33,7 +33,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await registerWithEmail(email, password, name);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -64,13 +64,15 @@ export default function RegisterPage() {
       >
         <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-primary/10">
           <CardHeader className="text-center">
-            <motion.div 
-                className="mx-auto mb-4"
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-              >
-              <Logo />
-            </motion.div>
+             <Link href="/" className="mx-auto">
+              <motion.div 
+                  className="mx-auto mb-4"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
+                <Logo />
+              </motion.div>
+             </Link>
             <CardTitle className="text-3xl font-headline text-primary">Create an Account</CardTitle>
             <CardDescription>Join ChargeSmart today!</CardDescription>
           </CardHeader>

@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [user, router]);
   
@@ -53,7 +53,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await signInWithEmail(email, password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -69,7 +69,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -100,13 +100,15 @@ export default function LoginPage() {
       >
         <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-primary/10">
           <CardHeader className="text-center">
-            <motion.div 
-              className="mx-auto mb-4"
-              whileHover={{ scale: 1.1, rotate: -5 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <Logo />
-            </motion.div>
+            <Link href="/" className="mx-auto">
+              <motion.div 
+                className="mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <Logo />
+              </motion.div>
+            </Link>
             <CardTitle className="text-3xl font-headline text-primary">Welcome Back</CardTitle>
             <CardDescription>Sign in to access your dashboard</CardDescription>
           </CardHeader>
