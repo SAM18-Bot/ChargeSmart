@@ -44,15 +44,15 @@
 
   .dark {
     --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --foreground: 210 40% 90%;
     --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 210 40% 90%;
     --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover-foreground: 210 40% 90%;
     --primary: 28 100% 62%; /* Neon Orange */
     --primary-foreground: 28 100% 10%;
     --secondary: 217 33% 20%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 210 40% 90%;
     --muted: 217 33% 20%;
     --muted-foreground: 215 20% 65%;
     --accent: 145 100% 50%; /* Neon Green */
