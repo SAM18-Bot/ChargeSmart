@@ -59,13 +59,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     if(userCredential.user) {
         await updateProfile(userCredential.user, { displayName: name });
-        // Manually update our local user state as onAuthStateChanged might be slow
-        const appUser: AppUser = {
-          id: userCredential.user.uid,
-          name: name,
-          email: email,
-        };
-        setUser(appUser);
+        // Refresh the user to get the updated profile
+        await userCredential.user.reload();
+        const firebaseUser = auth.currentUser;
+        if (firebaseUser) {
+           const appUser: AppUser = {
+              id: firebaseUser.uid,
+              name: firebaseUser.displayName || name,
+              email: firebaseUser.email || email,
+            };
+            setUser(appUser);
+        }
     }
   }
 

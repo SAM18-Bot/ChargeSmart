@@ -28,6 +28,10 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       await registerWithEmail(email, password, name);
+      toast({
+          title: "Account Created!",
+          description: "Welcome to ChargeSmart. You're now being redirected."
+      });
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -39,6 +43,18 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (user) {
+    router.push('/dashboard');
+    return (
+        <div className="flex flex-col items-center justify-center h-screen bg-background">
+            <div className="flex items-center space-x-4">
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+            </div>
+            <p className="mt-4 text-muted-foreground">Redirecting to your dashboard...</p>
+        </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -115,7 +131,7 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                 />
               </div>
-              <Button type="submit" className="w-full font-bold" disabled={isSubmitting}>
+              <Button type="submit" className="w-full font-bold bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>
