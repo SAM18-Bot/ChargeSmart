@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
@@ -69,15 +70,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // In a real app, you would save the contactNumber to Firestore here
         // e.g., await setUserData(firebaseUser.uid, { contactNumber: profileData.contactNumber });
         
-        // Refresh the user state
-        const appUser: AppUser = {
+        // Refresh the user state by creating a new object to trigger re-renders
+        const updatedUser: AppUser = {
             id: firebaseUser.uid,
             name: profileData.name,
             email: firebaseUser.email || '',
             photoURL: firebaseUser.photoURL || undefined,
-            contactNumber: profileData.contactNumber
+            contactNumber: profileData.contactNumber || 'N/A'
         };
-        setUser(appUser);
+        setUser(updatedUser);
       } else {
         throw new Error("No user is signed in to update.");
       }
@@ -96,3 +97,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+    

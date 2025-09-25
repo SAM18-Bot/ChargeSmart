@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { registerWithEmail, updateUserProfile, user, loading } = useAuth();
+  const { registerWithEmail, updateUserProfile, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -37,21 +37,22 @@ export default function RegisterPage() {
           title: "Account Created!",
           description: "Welcome to ChargeSmart. Please complete your profile."
       });
-      setShowProfileModal(true);
+      // This is the key change: ensure modal is shown
+      setShowProfileModal(true); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
         description: error.message || 'Could not create an account. Please try again.',
       });
-    } finally {
       setIsSubmitting(false);
     }
+    // We keep isSubmitting true until profile is also submitted
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    // No need to set isSubmitting to true again, it's already true
     try {
         await updateUserProfile({ name, contactNumber });
         toast({
@@ -71,8 +72,8 @@ export default function RegisterPage() {
     }
   }
 
-
-  if (user) {
+  // We don't want to redirect if a new user is in the process of completing their profile
+  if (user && !showProfileModal) {
     router.push('/dashboard');
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background">
@@ -81,16 +82,6 @@ export default function RegisterPage() {
             </div>
             <p className="mt-4 text-muted-foreground">Redirecting to your dashboard...</p>
         </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <div className="flex items-center space-x-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-        </div>
-      </div>
     );
   }
 
@@ -163,8 +154,8 @@ export default function RegisterPage() {
       </motion.div>
     </div>
 
-    <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent>
+    <Dialog open={showProfileModal} onOpenChange={(open) => { if (!open) { setIsSubmitting(false); setShowProfileModal(false); }}}>
+        <DialogContent className="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="font-headline text-2xl">Complete Your Profile</DialogTitle>
                 <DialogDescription>Just a couple more things to get you started.</DialogDescription>
@@ -181,7 +172,7 @@ export default function RegisterPage() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting && !showProfileModal}>
                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save and Continue
                     </Button>
