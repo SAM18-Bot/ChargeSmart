@@ -16,6 +16,7 @@ import type { User } from '@/lib/types';
 import { LifeBuoy, LogOut, User as UserIcon, History, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { ThemeToggle } from '../theme-toggle';
 
 interface HeaderProps {
   user: User;
@@ -31,13 +32,14 @@ export default function Header({ user, assistantDialog }: HeaderProps) {
         <Logo />
         <span className="text-xl font-bold font-headline tracking-tighter text-primary">ChargeSmart</span>
       </Link>
-      <div className="ml-auto flex items-center gap-4">
+      <div className="ml-auto flex items-center gap-2">
         {assistantDialog}
         <Button variant="ghost" asChild>
             <Link href="/about">
                 <Info className="mr-2 h-4 w-4" /> About Us
             </Link>
         </Button>
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">

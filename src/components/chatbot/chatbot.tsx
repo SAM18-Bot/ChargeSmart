@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { answerUserQuery } from '@/ai/flows/answer-user-queries';
-import { processVoiceCommand, textToSpeech } from '@/ai/flows/voice-assistant-flow';
+import { processVoiceCommand } from '@/ai/flows/voice-assistant-flow';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -145,15 +145,7 @@ export default function Chatbot() {
   useEffect(() => {
     if (isOpen) {
         const welcomeText = "Hello! How can I help you with your EV charging today? You can ask me questions or use the mic for voice commands.";
-        setIsLoading(true);
-        textToSpeech({text: welcomeText}).then(response => {
-            setMessages([{ sender: 'bot', text: welcomeText, audio: response.audio }]);
-        }).catch(err => {
-             setMessages([{ sender: 'bot', text: welcomeText }]);
-             console.error("Error generating welcome speech", err);
-        }).finally(() => {
-            setIsLoading(false);
-        });
+        setMessages([{ sender: 'bot', text: welcomeText }]);
     } else {
         // Stop recording if it's active when closing the chatbot
         if (isRecording) {
@@ -203,7 +195,7 @@ export default function Chatbot() {
             className="fixed bottom-24 right-6 z-40 w-full max-w-sm"
           >
             <Card className="shadow-2xl border-2 border-primary/20 rounded-2xl">
-              <CardHeader className="flex flex-row items-center justify-between bg-primary/10">
+              <CardHeader className="flex flex-row items-center justify-between bg-card">
                 <div className="flex items-center space-x-3">
                   <Bot className="h-6 w-6 text-primary" />
                   <CardTitle className="text-xl font-headline">ChargeSmart Assistant</CardTitle>

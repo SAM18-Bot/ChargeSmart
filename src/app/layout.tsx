@@ -4,6 +4,7 @@ import { AuthWrapper } from '@/contexts/auth-wrapper';
 import { Toaster } from '@/components/ui/toaster';
 import Script from 'next/script';
 import { PageTransition } from '@/components/page-transition';
+import { ThemeProvider } from '@/contexts/theme-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -26,12 +27,19 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-            <PageTransition>
-              <AuthWrapper>{children}</AuthWrapper>
-              <Toaster />
-            </PageTransition>
-        </AuthProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <AuthProvider>
+                <PageTransition>
+                  <AuthWrapper>{children}</AuthWrapper>
+                  <Toaster />
+                </PageTransition>
+            </AuthProvider>
+        </ThemeProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>

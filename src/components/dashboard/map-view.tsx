@@ -8,6 +8,7 @@ import { Charger } from '@/lib/types';
 import { Users, Navigation, Loader2, Crosshair } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTheme } from 'next-themes';
 
 interface MapViewProps {
   chargers: Charger[];
@@ -25,10 +26,7 @@ const defaultCenter = {
   lng: 73.8567
 };
 
-const mapOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-  styles: [
+const lightModeStyles = [
     {
       "featureType": "all",
       "elementType": "labels.text.fill",
@@ -152,20 +150,195 @@ const mapOptions = {
         { "visibility": "on" }
       ]
     }
-  ]
-};
+  ];
+  
+const darkModeStyles = [
+    {
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "saturation": 36
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 40
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 20
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            },
+            {
+                "weight": 1.2
+            }
+        ]
+    },
+    {
+        "featureType": "landscape",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 20
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 21
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 29
+            },
+            {
+                "weight": 0.2
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 18
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 19
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            }
+        ]
+    }
+];
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 export function MapView({ chargers }: MapViewProps) {
   const [center, setCenter] = useState(defaultCenter);
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
+  const { theme } = useTheme();
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: API_KEY,
   });
+
+  const mapOptions = {
+    disableDefaultUI: true,
+    zoomControl: true,
+    styles: theme === 'dark' ? darkModeStyles : lightModeStyles,
+  };
+
 
   const handleLocateMe = () => {
     if (navigator.geolocation) {
@@ -226,7 +399,7 @@ export function MapView({ chargers }: MapViewProps) {
   }
 
   return (
-    <Card className="overflow-hidden shadow-lg aspect-square relative">
+    <Card className="overflow-hidden shadow-lg aspect-square relative border">
       <CardContent className="p-0 h-full w-full">
         {isLoaded ? (
           <>
@@ -250,6 +423,7 @@ export function MapView({ chargers }: MapViewProps) {
             </TooltipProvider>
             
             <GoogleMap
+              key={theme}
               mapContainerStyle={containerStyle}
               center={center}
               zoom={12}
@@ -265,10 +439,10 @@ export function MapView({ chargers }: MapViewProps) {
                   title={charger.name}
                   icon={{
                     path: 'M13 10V3L4 14h7v7l9-11h-7z',
-                    fillColor: charger.status === 'Available' ? '#4ade80' : '#facc15',
+                    fillColor: charger.status === 'Available' ? 'hsl(var(--accent))' : 'hsl(var(--primary))',
                     fillOpacity: 1,
                     strokeWeight: 1,
-                    strokeColor: '#000000',
+                    strokeColor: theme === 'dark' ? '#FFFFFF' : '#000000',
                     scale: 1.5,
                     anchor: new window.google.maps.Point(12, 12),
                   }}
@@ -283,10 +457,10 @@ export function MapView({ chargers }: MapViewProps) {
                       pixelOffset: new window.google.maps.Size(0, -30)
                   }}
                 >
-                  <div className="p-2 font-body max-w-xs">
-                    <h3 className="font-bold font-headline text-lg mb-2">{selectedCharger.name}</h3>
+                  <div className="p-2 font-body max-w-xs bg-background text-foreground">
+                    <h3 className="font-bold font-headline text-lg mb-2 text-foreground">{selectedCharger.name}</h3>
                     <div className='flex justify-between items-center mb-3'>
-                      <Badge className={selectedCharger.status === 'Available' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-black'}>
+                      <Badge className={selectedCharger.status === 'Available' ? 'bg-accent text-accent-foreground' : 'bg-primary text-primary-foreground'}>
                           {selectedCharger.status}
                       </Badge>
                       <div className="flex items-center text-sm text-muted-foreground">

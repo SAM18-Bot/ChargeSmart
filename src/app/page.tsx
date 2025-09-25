@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Zap, Map, Bot, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
   <motion.div 
@@ -14,7 +15,7 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
   >
     <div className="flex items-center space-x-4 mb-4">
       <div className="p-3 bg-primary/20 rounded-full text-accent">{icon}</div>
-      <h3 className="text-xl font-bold font-headline text-primary-foreground">{title}</h3>
+      <h3 className="text-xl font-bold font-headline text-foreground">{title}</h3>
     </div>
     <p className="text-muted-foreground">{description}</p>
   </motion.div>
@@ -34,7 +35,8 @@ export default function LandingPage() {
             <Logo />
             <span className="text-xl font-bold font-headline tracking-tighter text-primary">ChargeSmart</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">Login</Link>
             </Button>
@@ -54,7 +56,7 @@ export default function LandingPage() {
           animate="visible"
         >
           <div 
-            className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
+            className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:14px_24px]">
           </div>
           <div className="absolute top-0 left-0 -z-10 w-64 h-64 bg-accent/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 animate-blob"></div>
           <div className="absolute bottom-0 right-0 -z-10 w-64 h-64 bg-primary/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
@@ -121,9 +123,9 @@ export default function LandingPage() {
                 <div className="md:w-1/2">
                     <h2 className="text-3xl font-bold font-headline text-foreground mb-4">Charge Your EV in 3 Simple Steps</h2>
                     <ol className="list-decimal list-inside space-y-4 text-muted-foreground">
-                        <li><span className="font-bold text-primary-foreground">Find & Select:</span> Use our interactive map to find a convenient charging station.</li>
-                        <li><span className="font-bold text-primary-foreground">Book & Pay:</span> Reserve your slot and complete the payment securely within the app.</li>
-                        <li><span className="font-bold text-primary-foreground">Plug-In & Charge:</span> Arrive at the station, plug in your vehicle, and start charging. We'll notify you when it's done!</li>
+                        <li><span className="font-bold text-foreground">Find & Select:</span> Use our interactive map to find a convenient charging station.</li>
+                        <li><span className="font-bold text-foreground">Book & Pay:</span> Reserve your slot and complete the payment securely within the app.</li>
+                        <li><span className="font-bold text-foreground">Plug-In & Charge:</span> Arrive at the station, plug in your vehicle, and start charging. We'll notify you when it's done!</li>
                     </ol>
                 </div>
                 <div className="md:w-1/2">

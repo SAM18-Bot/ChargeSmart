@@ -62,7 +62,7 @@ export default function RegisterPage() {
          animate={{ opacity: 1, y: 0 }}
          transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-primary/10">
+        <Card className="w-full max-w-md mx-auto shadow-2xl rounded-2xl bg-card/80 backdrop-blur-sm border-border">
           <CardHeader className="text-center">
              <Link href="/" className="mx-auto">
               <motion.div 

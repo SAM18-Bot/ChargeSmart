@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
-          className="prose lg:prose-xl max-w-4xl mx-auto dark:prose-invert"
+          className="prose lg:prose-xl max-w-4xl mx-auto"
         >
           <h1 className="text-4xl font-headline text-primary">Privacy Policy</h1>
           <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
