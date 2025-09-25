@@ -56,6 +56,12 @@ const config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+          'smart-bg': 'hsl(var(--card-smart-bg))',
+          'smart-fg': 'hsl(var(--card-smart-fg))',
+          'direct-bg': 'hsl(var(--card-direct-bg))',
+          'direct-fg': 'hsl(var(--card-direct-fg))',
+          'book-bg': 'hsl(var(--card-book-bg))',
+          'book-fg': 'hsl(var(--card-book-fg))',
         },
         chart: {
           '1': 'hsl(var(--chart-1))',

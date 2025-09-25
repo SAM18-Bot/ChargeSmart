@@ -24,6 +24,7 @@ import { ChargingOptionsCard } from './charging-options-card';
 import { Slider } from '../ui/slider';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { Calculator, Zap, CalendarClock } from 'lucide-react';
 
 declare global {
     interface Window {
@@ -420,26 +421,30 @@ export default function DashboardLayout({ user }: { user: User }) {
       <Header user={user} assistantDialog={<AiAssistantDialog evs={evs} chargers={chargers} pricePerKwh={PRICE_PER_KWH} chargerPower={CHARGER_POWER_KW} />} />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-12">
 
-        {/* Section 1: Charging Options */}
+        {/* Section 1: Welcome & Charging Options */}
         <motion.section
           variants={sectionVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
-            <h1 className="text-3xl font-bold font-headline mb-6 text-foreground">Start Your Session</h1>
+            <h1 className="text-3xl font-bold font-headline mb-2 text-foreground">Welcome back, {user.name.split(' ')[0]}! <span className='text-primary'>⚡️</span></h1>
+            <p className="text-muted-foreground mb-6">Ready to power up your vehicle? Choose your charging method below.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <ChargingOptionsCard 
+                    variant="smart"
                     title="Smart Charge"
                     description="Optimize charging based on your EV's needs. We'll calculate the kWh to full."
                     onClick={() => handleOpenOptionsModal('smart')}
                 />
                 <ChargingOptionsCard 
+                    variant="direct"
                     title="Direct kWh"
                     description="Choose a specific amount of kWh to add. Quick and simple."
                     onClick={() => handleOpenOptionsModal('direct')}
                 />
                 <ChargingOptionsCard 
+                    variant="book"
                     title="Book a Slot"
                     description="Reserve a charger for a future time. Plan ahead and avoid waiting."
                     onClick={() => handleOpenOptionsModal('book')}
