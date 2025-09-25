@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     await signOut(auth);
-    router.push('/login');
+    router.push('/');
   };
 
   const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, logout };
