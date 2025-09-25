@@ -12,22 +12,36 @@ import placeholderImages from '@/lib/placeholder-images.json';
 const { evChargingStation } = placeholderImages;
 
 
-const FloatingParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(80)].map((_, i) => (
-      <div
-        key={i}
-        className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 3}s`,
-          animation: `float ${3 + Math.random() * 2}s ease-in-out infinite alternate`,
-        }}
-      />
-    ))}
-  </div>
-);
+const FloatingParticles = () => {
+  const [particles, setParticles] = useState<any[]>([]);
+
+  useEffect(() => {
+    setParticles([...Array(80)].map((_, i) => ({
+      key: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 3}s`,
+      animationDuration: `${3 + Math.random() * 2}s`
+    })));
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div
+          key={p.key}
+          className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
+          style={{
+            left: p.left,
+            top: p.top,
+            animationDelay: p.animationDelay,
+            animation: `float ${p.animationDuration} ease-in-out infinite alternate`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const NetworkAnimation = () => {
   const [nodes, setNodes] = useState<{ id: number; x: number; y: number; size: number; delay: number; }[]>([]);
@@ -821,11 +835,3 @@ export default function ChargeSmart() {
         </div>
     );
 }
-
-    
-
-
-
-    
-
-    
