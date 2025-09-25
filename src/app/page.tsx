@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -7,6 +8,10 @@ import { motion } from 'framer-motion';
 import { Zap, Map, Bot, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { ThemeToggle } from '@/components/theme-toggle';
+import placeholderImages from '@/lib/placeholder-images.json';
+
+const { evChargingApp } = placeholderImages;
+
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
   <motion.div 
@@ -132,12 +137,12 @@ export default function LandingPage() {
                 </div>
                 <div className="md:w-1/2">
                     <Image
-                        src="https://picsum.photos/seed/ev-charging-app/600/400"
-                        alt="Phone screen showing EV charging app interface"
-                        width={600}
-                        height={400}
+                        src={evChargingApp.src}
+                        alt={evChargingApp.alt}
+                        width={evChargingApp.width}
+                        height={evChargingApp.height}
                         className="rounded-lg shadow-2xl border-2 border-primary/30"
-                        data-ai-hint="ev app"
+                        data-ai-hint={evChargingApp.hint}
                     />
                 </div>
             </div>

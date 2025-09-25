@@ -1,3 +1,4 @@
+
 'use client';
 
 import Header from '@/components/dashboard/header';
@@ -7,8 +8,11 @@ import { motion } from 'framer-motion';
 import { Users, Zap, Leaf, Heart, Mail } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import placeholderImages from '@/lib/placeholder-images.json';
 
-const TeamMemberCard = ({ name, role, imageUrl }: { name: string; role: string; imageUrl: string }) => (
+const { futureMobility, developerPortrait } = placeholderImages;
+
+const TeamMemberCard = ({ name, role, imageUrl, alt, hint }: { name: string; role: string; imageUrl: string; alt: string; hint: string }) => (
   <motion.div
     className="text-center"
     whileHover={{ scale: 1.05 }}
@@ -17,11 +21,11 @@ const TeamMemberCard = ({ name, role, imageUrl }: { name: string; role: string; 
     <div className="relative h-40 w-40 mx-auto mb-4">
       <Image
         src={imageUrl}
-        alt={`Photo of ${name}`}
+        alt={alt}
         width={200}
         height={200}
         className="rounded-full object-cover border-4 border-primary/50"
-        data-ai-hint="developer portrait"
+        data-ai-hint={hint}
       />
     </div>
     <h3 className="text-lg font-bold text-foreground">{name}</h3>
@@ -115,12 +119,12 @@ export default function AboutPage() {
             <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
                 <div className="md:w-1/2">
                     <Image
-                        src="https://picsum.photos/seed/future-mobility/600/400"
-                        alt="Electric car charging in a futuristic city"
-                        width={600}
-                        height={400}
+                        src={futureMobility.src}
+                        alt={futureMobility.alt}
+                        width={futureMobility.width}
+                        height={futureMobility.height}
                         className="rounded-lg shadow-2xl"
-                        data-ai-hint="futuristic ev"
+                        data-ai-hint={futureMobility.hint}
                     />
                 </div>
                 <div className="md:w-1/2">
@@ -147,7 +151,13 @@ export default function AboutPage() {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Developer</h2>
             <div className="flex justify-center">
-              <TeamMemberCard name="Sameer Bansode" role="Developer" imageUrl="https://picsum.photos/seed/developer-portrait/200/200" />
+              <TeamMemberCard 
+                name="Sameer Bansode" 
+                role="Developer" 
+                imageUrl={developerPortrait.src} 
+                alt={developerPortrait.alt}
+                hint={developerPortrait.hint}
+                />
             </div>
           </div>
         </motion.section>
