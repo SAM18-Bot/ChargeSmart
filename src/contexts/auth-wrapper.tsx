@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -6,6 +7,7 @@ import { useEffect } from 'react';
 import { Zap } from 'lucide-react';
 
 const PUBLIC_ROUTES = ['/', '/login', '/register', '/about', '/privacy-policy', '/terms-of-service'];
+const PROFILE_COMPLETION_ROUTE = '/complete-profile';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -13,9 +15,24 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user && !PUBLIC_ROUTES.includes(pathname)) {
+    if (loading) return;
+
+    const isPublic = PUBLIC_ROUTES.includes(pathname);
+    const isProfileCompletion = pathname === PROFILE_COMPLETION_ROUTE;
+
+    if (!user && !isPublic) {
       router.push('/login');
+    } else if (user) {
+      // If user is new (name is default 'User'), force them to complete profile
+      if (user.name === 'User' && !isProfileCompletion) {
+        router.push(PROFILE_COMPLETION_ROUTE);
+      }
+      // If user has completed profile but is on the completion page, redirect to dashboard
+      else if (user.name !== 'User' && isProfileCompletion) {
+        router.push('/dashboard');
+      }
     }
+
   }, [user, loading, pathname, router]);
 
   if (loading && !PUBLIC_ROUTES.includes(pathname)) {

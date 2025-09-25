@@ -39,10 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // In a real app, you would fetch the contactNumber from Firestore
         const appUser: AppUser = {
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User',
+          name: firebaseUser.displayName || 'User', // Default to 'User' if not set
           email: firebaseUser.email || 'No Email',
           photoURL: firebaseUser.photoURL || undefined,
-          contactNumber: '123-456-7890' // Placeholder
+          contactNumber: '123-456-7890' // Placeholder, will be updated from profile page
         };
         setUser(appUser);
       } else {
@@ -97,5 +97,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-    

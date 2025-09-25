@@ -13,27 +13,27 @@ import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { registerWithEmail, updateUserProfile, user } = useAuth();
+  const { registerWithEmail, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // We don't want to redirect if a new user is in the process of completing their profile
-    if (user && !showProfileModal) {
-      router.push('/dashboard');
+    if (user) {
+      // If a user is logged in, they shouldn't be on the register page.
+      // Send them to complete their profile if needed, or to the dashboard.
+      if (user.name === 'User') {
+          router.push('/complete-profile');
+      } else {
+          router.push('/dashboard');
+      }
     }
-  }, [user, showProfileModal, router]);
+  }, [user, router]);
 
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -45,55 +45,30 @@ export default function RegisterPage() {
           title: "Account Created!",
           description: "Welcome to ChargeSmart. Please complete your profile."
       });
-      // This is the key change: ensure modal is shown
-      setShowProfileModal(true); 
+      // The useEffect will handle redirection once the user object is updated.
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
         description: error.message || 'Could not create an account. Please try again.',
       });
-      setIsSubmitting(false);
-    }
-    // We keep isSubmitting true until profile is also submitted
-  };
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // No need to set isSubmitting to true again, it's already true
-    try {
-        await updateUserProfile({ name, contactNumber });
-        toast({
-            title: "Profile Complete!",
-            description: "You're all set. Welcome to the dashboard."
-        });
-        setShowProfileModal(false);
-        // The useEffect will handle redirection now
-    } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Profile Update Failed',
-            description: error.message || 'Could not save your profile. Please try again.',
-        });
     } finally {
         setIsSubmitting(false);
     }
-  }
+  };
 
-
-  if (user && !showProfileModal) {
+  if (user) {
     return (
         <div className="flex flex-col items-center justify-center h-screen bg-background">
             <div className="flex items-center space-x-4">
                 <Loader2 className="h-12 w-12 text-primary animate-spin" />
             </div>
-            <p className="mt-4 text-muted-foreground">Redirecting to your dashboard...</p>
+            <p className="mt-4 text-muted-foreground">Redirecting...</p>
         </div>
     );
   }
 
   return (
-    <>
     <div className="flex items-center justify-center min-h-screen bg-background p-4 font-body">
       <motion.div
          initial={{ opacity: 0, y: -20 }}
@@ -160,33 +135,5 @@ export default function RegisterPage() {
         </Card>
       </motion.div>
     </div>
-
-    <Dialog open={showProfileModal} onOpenChange={(open) => { if (!open) { setIsSubmitting(false); setShowProfileModal(false); }}}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle className="font-headline text-2xl">Complete Your Profile</DialogTitle>
-                <DialogDescription>Just a couple more things to get you started.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleProfileSubmit}>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="profile-name" className="text-right">Full Name</Label>
-                        <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" required />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="contact-number" className="text-right">Contact No.</Label>
-                        <Input id="contact-number" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="col-span-3" required />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button type="submit" disabled={isSubmitting && !showProfileModal}>
-                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save and Continue
-                    </Button>
-                </DialogFooter>
-            </form>
-        </DialogContent>
-    </Dialog>
-    </>
   );
 }
