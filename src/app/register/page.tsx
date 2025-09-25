@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -13,26 +13,31 @@ import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { registerWithEmail, user, loading } = useAuth();
+  const { registerWithEmail, updateUserProfile, user, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  
   const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await registerWithEmail(email, password, name);
+      await registerWithEmail(email, password);
       toast({
           title: "Account Created!",
-          description: "Welcome to ChargeSmart. You're now being redirected."
+          description: "Welcome to ChargeSmart. Please complete your profile."
       });
-      router.push('/dashboard');
+      setShowProfileModal(true);
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -43,6 +48,29 @@ export default function RegisterPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+        await updateUserProfile({ name, contactNumber });
+        toast({
+            title: "Profile Complete!",
+            description: "You're all set. Welcome to the dashboard."
+        });
+        setShowProfileModal(false);
+        router.push('/dashboard');
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Profile Update Failed',
+            description: error.message || 'Could not save your profile. Please try again.',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
+  }
+
 
   if (user) {
     router.push('/dashboard');
@@ -67,6 +95,7 @@ export default function RegisterPage() {
   }
 
   return (
+    <>
     <div className="flex items-center justify-center min-h-screen bg-background p-4 font-body">
       <motion.div
          initial={{ opacity: 0, y: -20 }}
@@ -89,20 +118,6 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={isSubmitting}
-                  name="name"
-                  autoComplete="name"
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -147,5 +162,33 @@ export default function RegisterPage() {
         </Card>
       </motion.div>
     </div>
+
+    <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle className="font-headline text-2xl">Complete Your Profile</DialogTitle>
+                <DialogDescription>Just a couple more things to get you started.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleProfileSubmit}>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="profile-name" className="text-right">Full Name</Label>
+                        <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="contact-number" className="text-right">Contact No.</Label>
+                        <Input id="contact-number" type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="col-span-3" required />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit" disabled={isSubmitting}>
+                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save and Continue
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }

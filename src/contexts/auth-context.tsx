@@ -20,7 +20,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  registerWithEmail: (email: string, pass: string) => Promise<void>;
+  updateUserProfile: (profileData: { name: string; contactNumber?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,11 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
+        // In a real app, you would fetch the contactNumber from Firestore
         const appUser: AppUser = {
           id: firebaseUser.uid,
           name: firebaseUser.displayName || 'User',
           email: firebaseUser.email || 'No Email',
           photoURL: firebaseUser.photoURL || undefined,
+          contactNumber: '123-456-7890' // Placeholder
         };
         setUser(appUser);
       } else {
@@ -55,22 +58,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signInWithPopup(auth, provider);
   };
   
-  const registerWithEmail = async (email: string, pass: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    if(userCredential.user) {
-        await updateProfile(userCredential.user, { displayName: name });
-        // Refresh the user to get the updated profile
-        await userCredential.user.reload();
-        const firebaseUser = auth.currentUser;
-        if (firebaseUser) {
-           const appUser: AppUser = {
-              id: firebaseUser.uid,
-              name: firebaseUser.displayName || name,
-              email: firebaseUser.email || email,
-            };
-            setUser(appUser);
-        }
-    }
+  const registerWithEmail = async (email: string, pass: string) => {
+    await createUserWithEmailAndPassword(auth, email, pass);
+  }
+
+  const updateUserProfile = async (profileData: { name: string; contactNumber?: string }) => {
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        await updateProfile(firebaseUser, { displayName: profileData.name });
+        // In a real app, you would save the contactNumber to Firestore here
+        // e.g., await setUserData(firebaseUser.uid, { contactNumber: profileData.contactNumber });
+        
+        // Refresh the user state
+        const appUser: AppUser = {
+            id: firebaseUser.uid,
+            name: profileData.name,
+            email: firebaseUser.email || '',
+            photoURL: firebaseUser.photoURL || undefined,
+            contactNumber: profileData.contactNumber
+        };
+        setUser(appUser);
+      } else {
+        throw new Error("No user is signed in to update.");
+      }
   }
 
   const signInWithEmail = async (email: string, pass: string) => {
@@ -82,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/');
   };
 
-  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, logout };
+  const value = { user, loading, signInWithGoogle, signInWithEmail, registerWithEmail, updateUserProfile, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
