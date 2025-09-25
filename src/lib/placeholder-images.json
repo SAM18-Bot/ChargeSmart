@@ -19,5 +19,12 @@
     "height": 400,
     "alt": "Phone screen showing EV charging app interface",
     "hint": "ev app"
+  },
+  "evChargingStation": {
+    "src": "https://picsum.photos/seed/ev-station/800/600",
+    "width": 800,
+    "height": 600,
+    "alt": "Modern electric car charging at a futuristic charging station",
+    "hint": "ev station"
   }
 }

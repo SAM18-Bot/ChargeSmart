@@ -1,12 +1,15 @@
-
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Zap, MapPin, Bot, Clock, Battery, DollarSign, Users, Star, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Logo } from '@/components/icons/logo';
+import placeholderImages from '@/lib/placeholder-images.json';
+
+const { evChargingStation } = placeholderImages;
 
 
 const FloatingParticles = () => (
@@ -723,10 +726,13 @@ export default function ChargeSmart() {
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="flex flex-col lg:flex-row items-center gap-16">
                             <div className="lg:w-1/2">
-                                <img
-                                    src="https://images.unsplash.com/photo-1614539893905-6752aa4a6b98?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                                    alt="Modern electric car charging at a futuristic charging station"
+                                <Image
+                                    src={evChargingStation.src}
+                                    alt={evChargingStation.alt}
+                                    width={800}
+                                    height={600}
                                     className="rounded-2xl shadow-2xl w-full h-96 object-cover"
+                                    data-ai-hint={evChargingStation.hint}
                                 />
                             </div>
                             <div className="lg:w-1/2">
@@ -800,6 +806,9 @@ export default function ChargeSmart() {
                         <Link href="/about" className="text-gray-500 hover:text-gray-800 transition-colors">
                             About Us
                         </Link>
+                        <Link href="/admin/login" className="text-gray-500 hover:text-gray-800 transition-colors">
+                            Admin Login
+                        </Link>
                         <Link href="/terms-of-service" className="text-gray-500 hover:text-gray-800 transition-colors">
                             Terms of Service
                         </Link>
@@ -815,3 +824,6 @@ export default function ChargeSmart() {
 
     
 
+
+
+    
