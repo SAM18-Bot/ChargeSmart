@@ -4,11 +4,11 @@
  *
  * - processVoiceCommand - A function that handles voice commands for booking.
  * - VoiceCommandInput - The input type for the processVoiceCommand function.
- * - VoiceCommandOutput - The return type for the processVoiceCommand function.
+ * - VoiceCommandOutput - The return type for the processVoicecommand function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { chargers, evs } from '@/lib/data';
 import { format } from 'date-fns';
 import wav from 'wav';
@@ -92,7 +92,7 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
 
 const prompt = ai.definePrompt({
   name: 'voiceAssistantPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-pro-latest',
   output: { schema: VoiceCommandOutputSchema },
   prompt: `You are a friendly and highly capable voice assistant for the ChargeSmart EV charging app.
 Your role is to answer user questions about EV charging, charger locations, and how to use the app.
