@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
+import QrScanner from 'qr-scanner';
+
 
 export default function AdminDashboardPage() {
   const { admin, adminLogout } = useAuth();
@@ -32,7 +34,7 @@ export default function AdminDashboardPage() {
   const [stationBookings, setStationBookings] = useState<Booking[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const scannerRef = useRef<QrScanner | null>(null);
 
   useEffect(() => {
     if (admin) {
@@ -45,137 +47,117 @@ export default function AdminDashboardPage() {
   const addDebugInfo = (message: string) => {
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
-
-  const detectCameras = async () => {
+  
+  const handleScanSuccess = (result: QrScanner.ScanResult) => {
     try {
-      addDebugInfo('Detecting available cameras...');
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      addDebugInfo(`Found ${videoDevices.length} camera(s)`);
-      return videoDevices;
-    } catch (error: any) {
-      addDebugInfo(`Camera detection failed: ${error.message}`);
-      return [];
+      const data = JSON.parse(result.data);
+      if (data.bookingId && data.user && data.kwh) {
+        setScannedData(data);
+        stopScanner();
+        toast({
+          title: "QR Code Scanned!",
+          description: "Ticket details loaded successfully."
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: "Invalid QR Code",
+          description: "The scanned code is not a valid booking ticket."
+        });
+      }
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: "Invalid QR Code",
+        description: "Could not read the QR code data."
+      });
     }
   };
 
-  const requestPermissionFirst = async () => {
-    try {
-      addDebugInfo('Requesting basic camera permission...');
-      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      tempStream.getTracks().forEach(track => track.stop());
-      addDebugInfo('Basic permission granted');
-      return true;
-    } catch (error: any) {
-      addDebugInfo(`Permission request failed: ${error.name}`);
-      return false;
+  const handleScanError = (error: any) => {
+    const errorString = String(error).toLowerCase();
+    if (!errorString.includes('no qr code found')) {
+      addDebugInfo(`Scanner error: ${error.message || error}`);
     }
   };
 
-  const startCamera = async (cameraId = null, forceRetry = false) => {
-    if (!forceRetry && isInitializing) return;
+
+  const startCamera = async () => {
+    if (!videoRef.current) return;
     
     setIsInitializing(true);
     setCameraError(null);
+    setHasCameraPermission(null);
     setRetryCount(currentRetry => currentRetry + 1);
+    addDebugInfo('Attempting to start camera...');
 
     try {
-      addDebugInfo('Starting camera initialization...');
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('MediaDevices not supported. Try Chrome, Firefox, or Safari.');
-      }
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+        });
 
-      const hasPermission = await requestPermissionFirst();
-      if (!hasPermission) {
-        throw new Error('Camera permission denied by user');
-      }
-
-      await detectCameras(); // To get labels
-
-      const constraintSets = [];
-      if (cameraId) {
-        constraintSets.push({ video: { deviceId: { exact: cameraId }, width: { ideal: 640 }, height: { ideal: 480 } } });
-      }
-      constraintSets.push(
-        { video: { facingMode: { exact: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
-        { video: { width: { ideal: 320 }, height: { ideal: 240 } } },
-        { video: true }
-      );
-
-      let stream: MediaStream | null = null;
-      for (const constraints of constraintSets) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-          break;
-        } catch (error: any) {
-          addDebugInfo(`Constraint set failed: ${error.name}`);
-        }
-      }
-
-      if (!stream) throw new Error('All camera constraint attempts failed');
-
-      streamRef.current = stream;
-      if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-      }
-      
-      setHasCameraPermission(true);
-      addDebugInfo('Camera setup complete!');
+
+        setHasCameraPermission(true);
+        addDebugInfo('Camera stream active.');
+
+        scannerRef.current = new QrScanner(
+            videoRef.current,
+            handleScanSuccess,
+            {
+                onDecodeError: handleScanError,
+                highlightScanRegion: true,
+                highlightCodeOutline: true,
+            }
+        );
+        await scannerRef.current.start();
+        addDebugInfo('QR scanner started.');
+
     } catch (error: any) {
-      console.error('Camera error:', error);
-      addDebugInfo(`Fatal error: ${error.message}`);
-      setHasCameraPermission(false);
-      let errorMessage = '';
-      switch (error.name) {
-        case 'NotAllowedError': errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.'; break;
-        case 'NotFoundError': errorMessage = 'No camera found. Please connect a camera and try again.'; break;
-        default: errorMessage = `Camera error: ${error.message}. Try refreshing the page.`;
-      }
-      setCameraError(errorMessage);
+        addDebugInfo(`Camera error: ${error.name} - ${error.message}`);
+        setHasCameraPermission(false);
+        let errorMessage = 'An unexpected error occurred.';
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Camera permission was denied. Please allow camera access in your browser settings.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'No camera was found on this device.';
+        }
+        setCameraError(errorMessage);
     } finally {
-      setIsInitializing(false);
+        setIsInitializing(false);
     }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setHasCameraPermission(null);
-    setCameraError(null);
-    setRetryCount(0);
-    setDebugInfo([]);
-  };
-
-  const startScanner = () => {
-    setScannerOpen(true);
-    setDebugInfo([]);
-    addDebugInfo('Scanner opened');
-    setTimeout(() => startCamera(), 100);
   };
 
   const stopScanner = () => {
+    scannerRef.current?.stop();
+    scannerRef.current?.destroy();
+    scannerRef.current = null;
+    
+    if (videoRef.current && videoRef.current.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+        addDebugInfo('Camera stream stopped.');
+    }
     setScannerOpen(false);
-    setScannedData(null);
-    stopCamera();
-    setIsInitializing(false);
+  };
+  
+  const handleOpenScanner = () => {
+    setScannerOpen(true);
+    setDebugInfo([]);
+    setRetryCount(0);
   };
 
   useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+    if (isScannerOpen) {
+      // Small delay to allow the dialog to render before starting camera
+      const timer = setTimeout(() => {
+          startCamera();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isScannerOpen]);
+
 
   const simulateQRScan = () => {
     if (stationBookings.length === 0) {
@@ -226,7 +208,7 @@ export default function AdminDashboardPage() {
           <p className="text-muted-foreground">Managing Station: {admin.stationId}</p>
         </div>
         <div className='flex items-center gap-4'>
-          <Button onClick={startScanner} className="bg-primary hover:bg-primary/90">
+          <Button onClick={handleOpenScanner} className="bg-primary hover:bg-primary/90">
             <QrCode className="mr-2 h-4 w-4" />
             Scan Ticket
           </Button>
@@ -286,8 +268,8 @@ export default function AdminDashboardPage() {
       </main>
       
       {/* QR Scanner Dialog */}
-      <Dialog open={isScannerOpen} onOpenChange={stopScanner}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <Dialog open={isScannerOpen} onOpenChange={setScannerOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" onEscapeKeyDown={stopScanner}>
           <DialogHeader>
             <DialogTitle>Scan User Ticket</DialogTitle>
             <DialogDescription>
@@ -296,46 +278,18 @@ export default function AdminDashboardPage() {
           </DialogHeader>
           
           <div className='bg-muted rounded-lg overflow-hidden aspect-square relative flex items-center justify-center border-2 border-dashed border-border'>
+             <video 
+              ref={videoRef} 
+              className="w-full h-full object-cover"
+              playsInline
+            />
             
-            {/* Real Camera Video Feed */}
             {hasCameraPermission && !isInitializing && (
-              <div className="w-full h-full relative">
-                <video 
-                  ref={videoRef} 
-                  className="w-full h-full object-cover"
-                  autoPlay 
-                  muted 
-                  playsInline
-                  controls={false}
-                />
-                
-                <div className="absolute inset-8 border-2 border-primary rounded-lg pointer-events-none animate-pulse">
-                  <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary/70 rounded-tl-lg"></div>
-                  <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary/70 rounded-tr-lg"></div>
-                  <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary/70 rounded-bl-lg"></div>
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary/70 rounded-br-lg"></div>
-                </div>
-                
-                <div className="absolute bottom-2 left-2 right-2 bg-black/80 text-white p-3 rounded-lg">
-                  <p className="text-xs mb-2 text-center">Hold steady - Scanning for QR code...</p>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={simulateQRScan}
-                      className="bg-green-600 hover:bg-green-700 flex-1 text-xs"
-                    >
-                      Simulate Scan
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => startCamera(null, true)}
-                      className="text-xs"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
+              <div className="absolute inset-8 border-2 border-primary rounded-lg pointer-events-none animate-pulse">
+                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary/70 rounded-tl-lg"></div>
+                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary/70 rounded-tr-lg"></div>
+                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary/70 rounded-bl-lg"></div>
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary/70 rounded-br-lg"></div>
               </div>
             )}
 
@@ -345,9 +299,6 @@ export default function AdminDashboardPage() {
                   <Camera className="h-12 w-12 mx-auto mb-3 animate-bounce text-primary" />
                   <p className='text-lg font-medium text-muted-foreground mb-2'>Starting Camera...</p>
                   <p className='text-sm text-muted-foreground mb-3'>Attempt {retryCount}</p>
-                  <div className="w-32 h-1 bg-muted rounded-full mx-auto overflow-hidden">
-                    <div className="h-full bg-primary rounded-full animate-pulse w-2/3"></div>
-                  </div>
                 </div>
               </div>
             )}
@@ -357,57 +308,19 @@ export default function AdminDashboardPage() {
                 <div className="w-full max-w-sm">
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Camera Issue (Attempt {retryCount})</AlertTitle>
+                    <AlertTitle>Camera Issue</AlertTitle>
                     <AlertDescription className="mb-3 text-xs">
                       {cameraError}
                     </AlertDescription>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => startCamera(null, true)}
-                          className="flex-1"
-                        >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          Retry
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={openCameraSettings}
-                          className="flex-1"
-                        >
-                          <Settings className="h-3 w-3 mr-1" />
-                          Help
-                        </Button>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="secondary"
-                        onClick={simulateQRScan}
-                        className="w-full"
-                      >
-                        Skip & Use Demo
-                      </Button>
-                    </div>
+                     <Button 
+                      size="sm" 
+                      onClick={startCamera}
+                      className="w-full"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Try Again
+                    </Button>
                   </Alert>
-                </div>
-              </div>
-            )}
-
-            {hasCameraPermission === null && !isInitializing && (
-              <div className='absolute inset-0 flex items-center justify-center p-4 bg-background/95'>
-                <div className='text-center'>
-                  <Camera className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <p className='text-lg font-medium text-foreground mb-2'>Camera Ready</p>
-                  <p className='text-sm text-muted-foreground mb-4'>Click to start camera and scan QR codes</p>
-                  <Button 
-                    onClick={() => startCamera()}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Camera
-                  </Button>
                 </div>
               </div>
             )}
@@ -424,20 +337,16 @@ export default function AdminDashboardPage() {
             </div>
           )}
           
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <CheckCircle className="h-3 w-3 text-green-500" />
-              <span>Secure Connection</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Camera className="h-3 w-3 text-primary" />
-              <span>Camera Required</span>
-            </div>
-          </div>
-          
           <DialogFooter>
             <Button variant='outline' onClick={stopScanner}>
               Close Scanner
+            </Button>
+            <Button 
+              size="sm" 
+              variant="secondary"
+              onClick={simulateQRScan}
+            >
+              Simulate Scan
             </Button>
           </DialogFooter>
         </DialogContent>
