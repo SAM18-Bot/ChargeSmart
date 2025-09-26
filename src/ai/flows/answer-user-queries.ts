@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -28,6 +29,7 @@ export async function answerUserQuery(input: AnswerUserQueryInput): Promise<Answ
 
 const prompt = ai.definePrompt({
   name: 'answerUserQueryPrompt',
+  model: 'googleai/gemini-2.0-flash-latest',
   input: {schema: AnswerUserQueryInputSchema},
   output: {schema: AnswerUserQueryOutputSchema},
   prompt: `You are a chatbot designed to answer user queries related to EV charging, charger availability, and app usage.

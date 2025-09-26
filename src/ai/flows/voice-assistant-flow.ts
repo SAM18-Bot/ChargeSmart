@@ -93,7 +93,7 @@ export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpee
 
 const prompt = ai.definePrompt({
   name: 'voiceAssistantPrompt',
-  model: 'googleai/gemini-1.5-pro-latest',
+  model: 'googleai/gemini-2.0-flash-latest',
   output: { schema: VoiceCommandOutputSchema },
   prompt: `You are a friendly and highly capable voice assistant for the ChargeSmart EV charging app.
 Your role is to answer user questions about EV charging, charger locations, and how to use the app.
