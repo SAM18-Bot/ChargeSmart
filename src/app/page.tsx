@@ -251,7 +251,7 @@ const ValueDemonstrationSection = () => {
             <div className="bg-background rounded-2xl shadow-2xl p-8 relative overflow-hidden">
               {/* Phone Mockup */}
               <div className="mx-auto w-64 h-96 bg-foreground/90 rounded-3xl p-2 relative animate-phoneFloat">
-                <div className="w-full h-full bg-gradient-to-br from-primary to-accent rounded-2xl relative overflow-hidden">
+                <div className="w-full h-full bg-primary rounded-2xl relative overflow-hidden">
                   
                   {/* App Interface Animation */}
                   <div className="p-4 text-primary-foreground">
