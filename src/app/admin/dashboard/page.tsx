@@ -10,12 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, QrCode, Zap, Clock, User, Bell, AlertTriangle, Camera, CheckCircle, XCircle, RefreshCw, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useBookings } from '@/contexts/booking-context';
-import { CHARGER_POWER_KW } from '@/components/dashboard/dashboard-layout';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import type { Booking } from '@/lib/types';
-import { format } from 'date-fns';
 import QrScanner from 'qr-scanner';
+import { CHARGER_POWER_KW } from '@/components/dashboard/dashboard-layout';
+import { format } from 'date-fns';
+import type { Booking } from '@/lib/types';
 
 
 export default function AdminDashboardPage() {
@@ -207,10 +207,6 @@ export default function AdminDashboardPage() {
         toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found or already active." });
     }
     setScannedData(null);
-  };
-
-  const openCameraSettings = () => {
-    alert('To fix camera issues:\n\n1. Check browser permissions (click 🔒 or camera icon in address bar)\n2. Refresh this page\n3. Close other apps using camera\n4. Try different browser\n5. Restart browser\n6. Check system camera settings');
   };
 
   if (!admin) {
@@ -429,3 +425,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
