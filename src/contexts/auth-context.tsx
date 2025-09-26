@@ -38,33 +38,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        // In a real app, you would fetch the contactNumber from Firestore
-        const appUser: AppUser = {
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'User', // Default to 'User' if not set
-          email: firebaseUser.email || 'No Email',
-          photoURL: firebaseUser.photoURL || undefined,
-          contactNumber: '123-456-7890' // Placeholder, will be updated from profile page
-        };
-        setUser(appUser);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    // By removing the onAuthStateChanged listener, the app will no longer
+    // automatically log in users, requiring a manual login each time.
+    setLoading(false);
   }, []);
+
+  const handleSuccessfulAuth = (firebaseUser: FirebaseUser) => {
+    const appUser: AppUser = {
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || 'User',
+      email: firebaseUser.email || 'No Email',
+      photoURL: firebaseUser.photoURL || undefined,
+      contactNumber: '123-456-7890' // Placeholder
+    };
+    setUser(appUser);
+  };
+
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    handleSuccessfulAuth(result.user);
   };
   
   const registerWithEmail = async (email: string, pass: string) => {
-    await createUserWithEmailAndPassword(auth, email, pass);
+    const result = await createUserWithEmailAndPassword(auth, email, pass);
+    handleSuccessfulAuth(result.user);
   }
 
   const updateUserProfile = async (profileData: { name: string; contactNumber?: string }) => {
@@ -89,11 +88,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signInWithEmail = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+    const result = await signInWithEmailAndPassword(auth, email, pass);
+    handleSuccessfulAuth(result.user);
   }
 
   const logout = async () => {
     await signOut(auth);
+    setUser(null);
     router.push('/');
   };
 
