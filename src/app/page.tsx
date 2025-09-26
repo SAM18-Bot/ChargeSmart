@@ -32,7 +32,7 @@ const FloatingParticles = () => {
       {particles.map(p => (
         <div
           key={p.key}
-          className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
+          className="absolute w-2 h-2 bg-primary/20 rounded-full animate-pulse"
           style={{
             left: p.left,
             top: p.top,
@@ -93,7 +93,7 @@ const NetworkAnimation = () => {
             y1={`${connection.from.y}%`}
             x2={`${connection.to.x}%`}
             y2={`${connection.to.y}%`}
-            stroke="rgba(255,255,255,0.3)"
+            stroke="hsl(var(--primary-foreground) / 0.3)"
             strokeWidth="0.1"
             className="animate-networkPulse"
             style={{
@@ -110,7 +110,7 @@ const NetworkAnimation = () => {
             cx={`${node.x}%`}
             cy={`${node.y}%`}
             r={node.size / 10}
-            fill="rgba(255,255,255,0.6)"
+            fill="hsl(var(--primary-foreground) / 0.6)"
             className="animate-networkNode"
             style={{ animationDelay: `${node.delay}s` }}
           />
@@ -121,7 +121,7 @@ const NetworkAnimation = () => {
           <circle
             key={`packet-${idx}`}
             r="0.3"
-            fill="rgba(59, 130, 246, 0.8)"
+            fill="hsl(var(--primary))"
             className="animate-dataPacket"
             style={{
               animationDelay: `${idx * 0.8}s`
@@ -163,8 +163,8 @@ const NetworkAnimation = () => {
             animationDuration: `${6 + Math.random() * 4}s`
           }}
         >
-          <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm border border-white/30">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+          <div className="w-6 h-6 bg-primary/20 rounded-lg flex items-center justify-center backdrop-blur-sm border border-primary/30">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
           </div>
         </div>
       ))}
@@ -179,19 +179,19 @@ const ValueDemonstrationSection = () => {
     {
       title: "Without ChargeSmart",
       problems: [
-        { icon: AlertCircle, text: "Driving around looking for chargers", color: "text-red-500" },
-        { icon: AlertCircle, text: "Waiting in long queues", color: "text-red-500" },
-        { icon: AlertCircle, text: "Paying premium rates", color: "text-red-500" },
-        { icon: AlertCircle, text: "Uncertainty about availability", color: "text-red-500" }
+        { icon: AlertCircle, text: "Driving around looking for chargers", color: "text-red-500 dark:text-red-400" },
+        { icon: AlertCircle, text: "Waiting in long queues", color: "text-red-500 dark:text-red-400" },
+        { icon: AlertCircle, text: "Paying premium rates", color: "text-red-500 dark:text-red-400" },
+        { icon: AlertCircle, text: "Uncertainty about availability", color: "text-red-500 dark:text-red-400" }
       ]
     },
     {
       title: "With ChargeSmart",
       solutions: [
-        { icon: CheckCircle, text: "Instant station discovery", color: "text-green-500" },
-        { icon: CheckCircle, text: "Pre-book your slot", color: "text-green-500" },
-        { icon: CheckCircle, text: "AI finds best rates", color: "text-green-500" },
-        { icon: CheckCircle, text: "Real-time availability", color: "text-green-500" }
+        { icon: CheckCircle, text: "Instant station discovery", color: "text-green-500 dark:text-green-400" },
+        { icon: CheckCircle, text: "Pre-book your slot", color: "text-green-500 dark:text-green-400" },
+        { icon: CheckCircle, text: "AI finds best rates", color: "text-green-500 dark:text-green-400" },
+        { icon: CheckCircle, text: "Real-time availability", color: "text-green-500 dark:text-green-400" }
       ]
     }
   ];
@@ -204,13 +204,13 @@ const ValueDemonstrationSection = () => {
   }, [demos.length]);
 
   return (
-    <section className="py-20 bg-gradient-to-r from-gray-50 to-blue-50 relative overflow-hidden">
+    <section className="py-20 bg-muted/20 dark:bg-muted/10 relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             See The Difference ChargeSmart Makes
           </h2>
-          <p className="text-xl text-gray-600">Experience the transformation from frustration to seamless charging</p>
+          <p className="text-xl text-muted-foreground">Experience the transformation from frustration to seamless charging</p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -226,9 +226,9 @@ const ValueDemonstrationSection = () => {
                 }`}
               >
                 <div className={`p-8 rounded-2xl ${
-                  index === 0 ? 'bg-red-50 border-2 border-red-200' : 'bg-green-50 border-2 border-green-200'
+                  index === 0 ? 'bg-red-500/10 border-2 border-red-500/20' : 'bg-green-500/10 border-2 border-green-500/20'
                 }`}>
-                  <h3 className="text-2xl font-bold mb-6 text-gray-800">{demo.title}</h3>
+                  <h3 className="text-2xl font-bold mb-6 text-foreground">{demo.title}</h3>
                   <div className="space-y-4">
                     {(demo.problems || demo.solutions || []).map((item, idx) => (
                       <div 
@@ -237,7 +237,7 @@ const ValueDemonstrationSection = () => {
                         style={{ animationDelay: `${idx * 0.2}s` }}
                       >
                         <item.icon className={`w-6 h-6 ${item.color}`} />
-                        <span className="text-gray-700 font-medium">{item.text}</span>
+                        <span className="text-foreground/90 font-medium">{item.text}</span>
                       </div>
                     ))}
                   </div>
@@ -248,13 +248,13 @@ const ValueDemonstrationSection = () => {
           
           {/* Animated Visual Demo */}
           <div className="relative">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+            <div className="bg-background rounded-2xl shadow-2xl p-8 relative overflow-hidden">
               {/* Phone Mockup */}
-              <div className="mx-auto w-64 h-96 bg-gray-900 rounded-3xl p-2 relative animate-phoneFloat">
-                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl relative overflow-hidden">
+              <div className="mx-auto w-64 h-96 bg-foreground/90 rounded-3xl p-2 relative animate-phoneFloat">
+                <div className="w-full h-full bg-gradient-to-br from-primary to-accent rounded-2xl relative overflow-hidden">
                   
                   {/* App Interface Animation */}
-                  <div className="p-4 text-white">
+                  <div className="p-4 text-primary-foreground">
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="font-bold text-lg">ChargeSmart</h4>
                       <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
@@ -308,7 +308,7 @@ const ValueDemonstrationSection = () => {
               ].map((benefit, idx) => (
                 <div
                   key={idx}
-                  className={`absolute ${benefit.position} bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium animate-floatingBenefit shadow-lg`}
+                  className={`absolute ${benefit.position} bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium animate-floatingBenefit shadow-lg`}
                   style={{ animationDelay: benefit.delay }}
                 >
                   {benefit.text}
@@ -343,56 +343,56 @@ const LiveStatsSection = () => {
   }, []);
 
   return (
-    <section className="py-16 bg-gray-900 text-white relative overflow-hidden">
+    <section className="py-16 bg-background dark:bg-card/20 text-foreground relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-cyan-500/20 animate-gradientShift"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/30 animate-gradientShift opacity-30 dark:opacity-100"></div>
       </div>
       
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">Live Impact Dashboard</h2>
-          <p className="text-xl text-gray-300">See the real-time impact ChargeSmart is making</p>
+          <p className="text-xl text-muted-foreground">See the real-time impact ChargeSmart is making</p>
         </div>
         
         <div className="grid md:grid-cols-4 gap-8">
-          <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 animate-statCard">
+          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
             <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-blue-400" />
             </div>
             <div className="text-3xl font-bold text-blue-400 animate-countUp">{stats.activeUsers.toLocaleString()}</div>
-            <div className="text-gray-300 mt-2">Active Users Today</div>
+            <div className="text-muted-foreground mt-2">Active Users Today</div>
           </div>
           
-          <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 animate-statCard">
+          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Zap className="w-8 h-8 text-green-400" />
             </div>
             <div className="text-3xl font-bold text-green-400 animate-countUp">{stats.chargingSessions.toLocaleString()}</div>
-            <div className="text-gray-300 mt-2">Charging Sessions</div>
+            <div className="text-muted-foreground mt-2">Charging Sessions</div>
           </div>
           
-          <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 animate-statCard">
+          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
             <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-yellow-400" />
             </div>
             <div className="text-3xl font-bold text-yellow-400 animate-countUp">₹{stats.moneySaved.toLocaleString()}</div>
-            <div className="text-gray-300 mt-2">Money Saved Today</div>
+            <div className="text-muted-foreground mt-2">Money Saved Today</div>
           </div>
           
-          <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 animate-statCard">
+          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
             <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Battery className="w-8 h-8 text-purple-400" />
             </div>
             <div className="text-3xl font-bold text-purple-400 animate-countUp">{stats.co2Reduced.toFixed(1)}T</div>
-            <div className="text-gray-300 mt-2">CO₂ Reduced</div>
+            <div className="text-muted-foreground mt-2">CO₂ Reduced</div>
           </div>
         </div>
         
         {/* Live Activity Feed */}
         <div className="mt-16">
           <h3 className="text-2xl font-bold text-center mb-8">Live Activity Feed</h3>
-          <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+          <div className="max-w-2xl mx-auto bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/10">
             <div className="space-y-4">
               {[
                 "🚗 User booked Station A in Mumbai - Saved ₹120",
@@ -403,12 +403,12 @@ const LiveStatsSection = () => {
               ].map((activity, idx) => (
                 <div 
                   key={idx}
-                  className="flex items-center gap-3 p-3 bg-white/5 rounded-lg animate-activityFeed"
+                  className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg animate-activityFeed"
                   style={{ animationDelay: `${idx * 0.5}s` }}
                 >
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-gray-300">{activity}</span>
-                  <span className="text-xs text-gray-500 ml-auto">now</span>
+                  <span className="text-muted-foreground">{activity}</span>
+                  <span className="text-xs text-muted-foreground/80 ml-auto">now</span>
                 </div>
               ))}
             </div>
@@ -463,18 +463,18 @@ const UserJourneyAnimation = () => {
   }, [journeySteps.length]);
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-background">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
+          <h2 className="text-4xl font-bold text-foreground mb-4">
             The Perfect User Journey
           </h2>
-          <p className="text-xl text-gray-600">Watch how ChargeSmart transforms the charging experience</p>
+          <p className="text-xl text-muted-foreground">Watch how ChargeSmart transforms the charging experience</p>
         </div>
         
         {/* Journey Timeline */}
         <div className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-200 transform -translate-x-1/2"></div>
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-border/50 transform -translate-x-1/2"></div>
           
           <div className="space-y-16">
             {journeySteps.map((step, idx) => (
@@ -486,11 +486,11 @@ const UserJourneyAnimation = () => {
                   <div className={`inline-block p-8 rounded-2xl transition-all duration-1000 transform ${
                     currentStep === idx 
                       ? 'scale-110 shadow-2xl bg-gradient-to-r ' + step.color + ' text-white' 
-                      : 'scale-100 shadow-lg bg-gray-50 text-gray-800'
+                      : 'scale-100 shadow-lg bg-card text-foreground'
                   }`}>
                     <div className="text-6xl mb-4">{step.visual}</div>
                     <h3 className="text-2xl font-bold mb-2">{step.title}</h3>
-                    <p className={currentStep === idx ? 'text-white/90' : 'text-gray-600'}>
+                    <p className={currentStep === idx ? 'text-white/90' : 'text-muted-foreground'}>
                       {step.description}
                     </p>
                   </div>
@@ -498,8 +498,8 @@ const UserJourneyAnimation = () => {
                 
                 <div className={`w-8 h-8 rounded-full border-4 transition-all duration-500 ${
                   currentStep === idx 
-                    ? 'bg-blue-600 border-blue-600 scale-150' 
-                    : 'bg-white border-gray-300'
+                    ? 'bg-primary border-primary scale-150' 
+                    : 'bg-background border-border'
                 }`}></div>
                 
                 <div className="flex-1"></div>
@@ -520,7 +520,7 @@ export default function ChargeSmart() {
     }, [])
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gray-900">
+        <div className="min-h-screen relative overflow-hidden bg-background">
             <style jsx>{`
               @keyframes float {
                 0% { transform: translateY(0px) translateX(0px); opacity: 0.2; }
@@ -627,13 +627,14 @@ export default function ChargeSmart() {
             `}</style>
 
             {/* Animated Background Image with Overlay */}
-            <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{
-                    backgroundImage: `url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
-                }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/80 via-cyan-500/75 to-teal-400/70"></div>
+            <div className="absolute inset-0 bg-background dark:bg-card">
+              <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 dark:opacity-5"
+                  style={{
+                      backgroundImage: `url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
+                  }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-background dark:from-primary/20 dark:via-accent/10 dark:to-background"></div>
             </div>
             {isClient && <>
                 <NetworkAnimation />
@@ -641,18 +642,18 @@ export default function ChargeSmart() {
             </>}
             
             {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-black/30 backdrop-blur-lg">
+            <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background/30 backdrop-blur-lg">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
                     <Link href="/" className="flex items-center gap-3">
                         <Logo />
-                        <span className="text-2xl font-bold text-white">ChargeSmart</span>
+                        <span className="text-2xl font-bold text-foreground">ChargeSmart</span>
                     </Link>
                     <div className="flex items-center gap-3">
                         <ThemeToggle />
                         <Button variant="ghost" asChild>
-                            <Link href="/login" className="text-white hover:bg-white/10">Log In</Link>
+                            <Link href="/login" className="text-foreground hover:bg-muted/50">Log In</Link>
                         </Button>
-                        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium">
                             <Link href="/register">Sign Up Free</Link>
                         </Button>
                     </div>
@@ -663,14 +664,14 @@ export default function ChargeSmart() {
                 {/* Hero Section */}
                 <section className="text-center px-6 py-20">
                     <div className="max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+                        <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight tracking-tight">
                             Seamless EV Charging,<br />
-                            Intelligently Managed
+                            <span className="text-primary">Intelligently Managed</span>
                         </h1>
-                        <p className="text-xl md:text-2xl max-w-3xl mx-auto text-white/95 mb-10 leading-relaxed font-light">
+                        <p className="text-xl md:text-2xl max-w-3xl mx-auto text-muted-foreground mb-10 leading-relaxed font-light">
                             ChargeSmart is your ultimate companion for finding, booking, and optimizing your electric vehicle charging. Spend less time waiting and more time driving.
                         </p>
-                        <Button size="lg" asChild className="bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all transform hover:scale-105 shadow-lg">
+                        <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all transform hover:scale-105 shadow-lg">
                            <Link href="/register">
                              Get Started <ArrowRight className="ml-3 h-6 w-6" />
                            </Link>
@@ -688,48 +689,48 @@ export default function ChargeSmart() {
                 <UserJourneyAnimation />
 
                 {/* Features Section - White Background */}
-                <section className="bg-white py-20 relative">
+                <section className="bg-muted/20 dark:bg-card/20 py-20 relative">
                     <div className="max-w-7xl mx-auto px-6">
-                        <h2 className="text-4xl font-bold text-gray-800 text-center mb-16">
+                        <h2 className="text-4xl font-bold text-foreground text-center mb-16">
                             Everything You Need for Smart Charging
                         </h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                            <div className="text-center p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all">
-                                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                    <MapPin className="w-8 h-8 text-blue-600" />
+                            <div className="text-center p-6 rounded-2xl bg-card hover:shadow-lg transition-all">
+                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <MapPin className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Live Station Map</h3>
-                                <p className="text-gray-600 leading-relaxed">
+                                <h3 className="text-xl font-bold text-foreground mb-4">Live Station Map</h3>
+                                <p className="text-muted-foreground leading-relaxed">
                                     Find available chargers near you with our real-time map. See status, queue times, and more.
                                 </p>
                             </div>
                             
-                            <div className="text-center p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all">
-                                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                    <Bot className="w-8 h-8 text-blue-600" />
+                            <div className="text-center p-6 rounded-2xl bg-card hover:shadow-lg transition-all">
+                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <Bot className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">AI Schedule Optimizer</h3>
-                                <p className="text-gray-600 leading-relaxed">
+                                <h3 className="text-xl font-bold text-foreground mb-4">AI Schedule Optimizer</h3>
+                                <p className="text-muted-foreground leading-relaxed">
                                     Our AI assistant finds the most cost-effective and time-efficient charging plan for your EV.
                                 </p>
                             </div>
                             
-                            <div className="text-center p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all">
-                                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                    <Clock className="w-8 h-8 text-blue-600" />
+                            <div className="text-center p-6 rounded-2xl bg-card hover:shadow-lg transition-all">
+                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <Clock className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Advance Booking</h3>
-                                <p className="text-gray-600 leading-relaxed">
+                                <h3 className="text-xl font-bold text-foreground mb-4">Advance Booking</h3>
+                                <p className="text-muted-foreground leading-relaxed">
                                     Plan ahead and reserve charging slot to avoid waiting. Perfect for your busy schedule.
                                 </p>
                             </div>
                             
-                            <div className="text-center p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all">
-                                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                    <Zap className="w-8 h-8 text-blue-600" />
+                            <div className="text-center p-6 rounded-2xl bg-card hover:shadow-lg transition-all">
+                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                    <Zap className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Seamless Payments</h3>
-                                <p className="text-gray-600 leading-relaxed">
+                                <h3 className="text-xl font-bold text-foreground mb-4">Seamless Payments</h3>
+                                <p className="text-muted-foreground leading-relaxed">
                                     Pay securely in-app with multiple payment options. Get digital receipts and track history.
                                 </p>
                             </div>
@@ -738,7 +739,7 @@ export default function ChargeSmart() {
                 </section>
 
                 {/* How It Works Section - Light Blue Background */}
-                <section className="bg-blue-50 py-20">
+                <section className="bg-background py-20">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="flex flex-col lg:flex-row items-center gap-16">
                             <div className="lg:w-1/2">
@@ -753,39 +754,39 @@ export default function ChargeSmart() {
                             </div>
                             <div className="lg:w-1/2">
                                 <div className="mb-8">
-                                    <h2 className="text-4xl font-bold text-gray-800 mb-4">How It Works</h2>
+                                    <h2 className="text-4xl font-bold text-foreground mb-4">How It Works</h2>
                                 </div>
                                 
-                                <h3 className="text-2xl font-bold text-gray-800 mb-8">Get Charged in 3 Easy Steps</h3>
+                                <h3 className="text-2xl font-bold text-foreground mb-8">Get Charged in 3 Easy Steps</h3>
                                 
                                 <div className="space-y-6">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
+                                        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
                                             1
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-gray-800 mb-1">Find & Select:</h4>
-                                            <p className="text-gray-600">Use our live map to find a nearby charger. Choose between smart charging, direct kWh, or book a future slot.</p>
+                                            <h4 className="font-semibold text-foreground mb-1">Find & Select:</h4>
+                                            <p className="text-muted-foreground">Use our live map to find a nearby charger. Choose between smart charging, direct kWh, or book a future slot.</p>
                                         </div>
                                     </div>
                                     
                                     <div className="flex items-start gap-4">
-                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
+                                        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
                                             2
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-gray-800 mb-1">Pay Securely:</h4>
-                                            <p className="text-gray-600">Complete your payment in-app. We'll generate a QR code ticket for you to validate your session at the station.</p>
+                                            <h4 className="font-semibold text-foreground mb-1">Pay Securely:</h4>
+                                            <p className="text-muted-foreground">Complete your payment in-app. We'll generate a QR code ticket for you to validate your session at the station.</p>
                                         </div>
                                     </div>
                                     
                                     <div className="flex items-start gap-4">
-                                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
+                                        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
                                             3
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-gray-800 mb-1">Plug In & Go:</h4>
-                                            <p className="text-gray-600">Scan your ticket, plug in your vehicle, and relax. We'll notify you when your charge is complete.</p>
+                                            <h4 className="font-semibold text-foreground mb-1">Plug In & Go:</h4>
+                                            <p className="text-muted-foreground">Scan your ticket, plug in your vehicle, and relax. We'll notify you when your charge is complete.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -795,15 +796,15 @@ export default function ChargeSmart() {
                 </section>
 
                 {/* CTA Section - Light Blue Background */}
-                <section className="bg-blue-100 py-20">
+                <section className="bg-muted/30 py-20">
                     <div className="max-w-4xl mx-auto text-center px-6">
-                        <h2 className="text-4xl font-bold text-gray-800 mb-6">
+                        <h2 className="text-4xl font-bold text-foreground mb-6">
                             Ready to Join the Smart Charging Revolution?
                         </h2>
-                        <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+                        <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
                             Create your free account today and experience the future of electric vehicle charging.
                         </p>
-                         <Button size="lg" asChild className="bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all transform hover:scale-105 shadow-lg">
+                         <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all transform hover:scale-105 shadow-lg">
                            <Link href="/register">
                              Sign Up Now <ArrowRight className="ml-3 h-6 w-6" />
                            </Link>
@@ -813,22 +814,22 @@ export default function ChargeSmart() {
             </main>
 
             {/* Footer - White Background */}
-            <footer className="bg-white border-t border-gray-200 py-8">
+            <footer className="bg-card border-t border-border/50 py-8">
                 <div className="max-w-7xl mx-auto text-center px-6">
-                    <p className="text-gray-500 text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                         &copy; {new Date().getFullYear()} ChargeSmart. All rights reserved.
                     </p>
                     <nav className="flex justify-center gap-8 text-sm">
-                        <Link href="/about" className="text-gray-500 hover:text-gray-800 transition-colors">
+                        <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                             About Us
                         </Link>
-                        <Link href="/admin/login" className="text-gray-500 hover:text-gray-800 transition-colors">
+                        <Link href="/admin/login" className="text-muted-foreground hover:text-foreground transition-colors">
                             Admin Login
                         </Link>
-                        <Link href="/terms-of-service" className="text-gray-500 hover:text-gray-800 transition-colors">
+                        <Link href="/terms-of-service" className="text-muted-foreground hover:text-foreground transition-colors">
                             Terms of Service
                         </Link>
-                        <Link href="/privacy-policy" className="text-gray-500 hover:text-gray-800 transition-colors">
+                        <Link href="/privacy-policy" className="text-muted-foreground hover:text-foreground transition-colors">
                             Privacy Policy
                         </Link>
                     </nav>
@@ -837,3 +838,5 @@ export default function ChargeSmart() {
         </div>
     );
 }
+
+    
