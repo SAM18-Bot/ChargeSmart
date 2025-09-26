@@ -11,6 +11,7 @@ export interface AdminUser {
   id: string;
   name: string;
   stationId: string;
+  stationName?: string;
 }
 
 export interface EV {

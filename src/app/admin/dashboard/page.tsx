@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -221,7 +222,7 @@ export default function AdminDashboardPage() {
       <header className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Managing Station: {admin.stationId}</p>
+          <p className="text-muted-foreground">Managing Station: {admin.stationName || admin.stationId}</p>
         </div>
         <div className='flex items-center gap-4'>
           <Button onClick={handleOpenScanner} className="bg-primary hover:bg-primary/90">

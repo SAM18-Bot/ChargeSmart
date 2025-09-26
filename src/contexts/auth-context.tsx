@@ -15,6 +15,7 @@ import {
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
+import { chargers } from '@/lib/data';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -31,6 +32,17 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const adminCredentials = [
+    { adminId: 'admin-cz-001', password: '123456', stationId: 'CZ-001' },
+    { adminId: 'admin-cz-002', password: '123456', stationId: 'CZ-002' },
+    { adminId: 'admin-cz-003', password: '123456', stationId: 'CZ-003' },
+    { adminId: 'admin-cz-004', password: '123456', stationId: 'CZ-004' },
+    { adminId: 'admin-cz-005', password: '123456', stationId: 'CZ-005' },
+    { adminId: 'admin-cz-006', password: '123456', stationId: 'CZ-006' },
+    { adminId: 'admin-cz-007', password: '123456', stationId: 'CZ-007' },
+    { adminId: 'admin-cz-008', password: '123456', stationId: 'CZ-008' },
+];
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
@@ -38,9 +50,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // By removing the onAuthStateChanged listener, the app will no longer
-    // automatically log in users, requiring a manual login each time.
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        handleSuccessfulAuth(firebaseUser);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleSuccessfulAuth = (firebaseUser: FirebaseUser) => {
@@ -98,14 +116,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/');
   };
 
-  // Simulated Admin Auth
   const adminLogin = async (adminId: string, pass: string) => {
-    // In a real app, you'd verify this against a database.
-    if (adminId === 'admin' && pass === 'password') {
+    const creds = adminCredentials.find(c => c.adminId === adminId && c.password === pass);
+    if (creds) {
+      const station = chargers.find(c => c.id === creds.stationId);
       const demoAdmin: AdminUser = {
-        id: 'admin01',
-        name: 'Station Admin',
-        stationId: 'CZ-001', // Manages this station
+        id: creds.adminId,
+        name: station?.name || 'Admin',
+        stationId: creds.stationId,
+        stationName: station?.name || 'Unknown Station'
       };
       setAdmin(demoAdmin);
       return true;
