@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -172,6 +173,12 @@ export default function AdminDashboardPage() {
     }
   }, [isScannerOpen]);
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      stopScanner();
+    }
+    setScannerOpen(open);
+  }
 
   const simulateQRScan = () => {
     if (stationBookings.length === 0) {
@@ -282,8 +289,8 @@ export default function AdminDashboardPage() {
       </main>
       
       {/* QR Scanner Dialog */}
-      <Dialog open={isScannerOpen} onOpenChange={setScannerOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" onEscapeKeyDown={stopScanner}>
+      <Dialog open={isScannerOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Scan User Ticket</DialogTitle>
             <DialogDescription>
@@ -352,7 +359,7 @@ export default function AdminDashboardPage() {
           )}
           
           <DialogFooter>
-            <Button variant='outline' onClick={stopScanner}>
+            <Button variant='outline' onClick={() => handleDialogClose(false)}>
               Close Scanner
             </Button>
             <Button 
