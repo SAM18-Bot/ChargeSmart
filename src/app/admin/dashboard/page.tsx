@@ -93,7 +93,11 @@ export default function AdminDashboardPage() {
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            } 
         });
 
         videoRef.current.srcObject = stream;
@@ -109,6 +113,17 @@ export default function AdminDashboardPage() {
                 onDecodeError: handleScanError,
                 highlightScanRegion: true,
                 highlightCodeOutline: true,
+                calculateScanRegion: (video) => {
+                    const videoWidth = video.videoWidth;
+                    const videoHeight = video.videoHeight;
+                    const regionSize = Math.min(videoWidth, videoHeight) * 0.75;
+                    return {
+                        x: (videoWidth - regionSize) / 2,
+                        y: (videoHeight - regionSize) / 2,
+                        width: regionSize,
+                        height: regionSize,
+                    };
+                }
             }
         );
         await scannerRef.current.start();
@@ -408,3 +423,6 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+
+    
