@@ -10,9 +10,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import placeholderImages from '@/lib/placeholder-images.json';
 
-const { futureMobility, developerPortrait } = placeholderImages;
+const { futureMobility } = placeholderImages;
 
-const TeamMemberCard = ({ name, role, imageUrl, alt, hint }: { name: string; role: string; imageUrl: string; alt: string; hint: string }) => (
+const TeamMemberCard = ({ name, imageUrl, alt, hint }: { name: string; imageUrl: string; alt: string; hint: string }) => (
   <motion.div
     className="text-center"
     whileHover={{ scale: 1.05 }}
@@ -29,7 +29,6 @@ const TeamMemberCard = ({ name, role, imageUrl, alt, hint }: { name: string; rol
       />
     </div>
     <h3 className="text-lg font-bold text-foreground">{name}</h3>
-    <p className="text-sm text-primary">{role}</p>
   </motion.div>
 );
 
@@ -58,6 +57,15 @@ export default function AboutPage() {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
   };
+  
+  const teamMembers = [
+    { name: 'Sameer Bansode', hint: 'male developer' },
+    { name: 'Deep Biswas', hint: 'male engineer' },
+    { name: 'Madhura Raut', hint: 'female developer' },
+    { name: 'Vaishnavi Shirase', hint: 'female engineer' },
+    { name: 'Tanvi Singh', hint: 'female designer' },
+    { name: 'Johnsen Abraham', hint: 'male product manager' }
+  ];
 
 
   return (
@@ -149,15 +157,17 @@ export default function AboutPage() {
             viewport={{ once: true, amount: 0.3 }}
         >
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Developer</h2>
-            <div className="flex justify-center">
-              <TeamMemberCard 
-                name="John Doe" 
-                role="Developer" 
-                imageUrl={developerPortrait.src} 
-                alt="Portrait of the developer"
-                hint={developerPortrait.hint}
+            <h2 className="text-3xl font-bold font-headline text-foreground mb-12">Meet the Team</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+              {teamMembers.map((member) => (
+                <TeamMemberCard 
+                  key={member.name}
+                  name={member.name} 
+                  imageUrl={`https://picsum.photos/seed/${member.name.replace(' ', '')}/200/200`}
+                  alt={`Portrait of ${member.name}`}
+                  hint={member.hint}
                 />
+              ))}
             </div>
           </div>
         </motion.section>
