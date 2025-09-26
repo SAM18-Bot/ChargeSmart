@@ -52,7 +52,6 @@ export default function AdminDashboardPage() {
     }
     setScannerOpen(false);
     setScannedData(null);
-    setHasCameraPermission(null); // Reset permission state
   };
   
   const handleScanSuccess = (result: QrScanner.ScanResult) => {
@@ -77,6 +76,29 @@ export default function AdminDashboardPage() {
         // toast({ variant: 'destructive', title: "Scanner Error", description: error.message || "An unexpected error occurred." });
     }
   };
+  
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        // Just request permission, don't use the stream yet.
+        const stream = await navigator.mediaDevices.getUserMedia({video: true});
+        setHasCameraPermission(true);
+        // Stop the tracks immediately, we only wanted to prompt for permission.
+        stream.getTracks().forEach(track => track.stop());
+      } catch (error) {
+        console.error('Error accessing camera on page load:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'To scan tickets, please enable camera permissions in your browser settings.',
+        });
+      }
+    };
+
+    getCameraPermission();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isScannerOpen) {
@@ -85,15 +107,13 @@ export default function AdminDashboardPage() {
 
       const initializeScanner = async () => {
         try {
-          // Request permission
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
           setHasCameraPermission(true);
 
           if (videoElem) {
             videoElem.srcObject = stream;
           }
-
-          // Important: Create scanner instance only after stream is set
+          
           scannerRef.current = new QrScanner(
             videoElem,
             handleScanSuccess,
@@ -104,6 +124,7 @@ export default function AdminDashboardPage() {
             }
           );
           await scannerRef.current.start();
+
         } catch (err: any) {
           console.error('Error accessing camera:', err);
           if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
