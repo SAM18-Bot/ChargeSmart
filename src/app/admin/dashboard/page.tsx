@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -7,46 +8,41 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
 import { LogOut, QrCode, Zap, Clock, User, Bell, AlertTriangle, Camera, CheckCircle, XCircle, RefreshCw, Settings } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { useBookings } from '@/contexts/booking-context';
+import { CHARGER_POWER_KW } from '@/components/dashboard/dashboard-layout';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import type { Booking } from '@/lib/types';
+import { format } from 'date-fns';
 
-export default function AdminDashboardPreview() {
+export default function AdminDashboardPage() {
+  const { admin, adminLogout } = useAuth();
+  const { bookings, activateBooking } = useBookings();
+  const { toast } = useToast();
+  const router = useRouter();
+
   const [isScannerOpen, setScannerOpen] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+  const [scannedData, setScannedData] = useState<any>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [cameraError, setCameraError] = useState(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [debugInfo, setDebugInfo] = useState([]);
-  const [availableCameras, setAvailableCameras] = useState([]);
-  const [selectedCameraId, setSelectedCameraId] = useState(null);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-
-  // Mock data
-  const admin = { stationId: "CHG-001" };
-  const [bookings, setBookings] = useState([]);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [stationBookings, setStationBookings] = useState<Booking[]>([]);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    setBookings([
-      {
-        id: 1,
-        userName: "John Doe",
-        date: new Date(Date.now() + 3600000).toISOString(),
-        status: "pending",
-        kwh: 25.5,
-        cost: 382.5
-      },
-      {
-        id: 2,
-        userName: "Jane Smith",
-        date: new Date(Date.now() + 7200000).toISOString(),
-        status: "active",
-        kwh: 18.2,
-        cost: 273.0
-      }
-    ]);
-  }, []);
+    if (admin) {
+      const filtered = bookings.filter(b => b.chargerId === admin.stationId);
+      setStationBookings(filtered);
+    }
+  }, [bookings, admin]);
 
-  const addDebugInfo = (message) => {
+
+  const addDebugInfo = (message: string) => {
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
@@ -55,12 +51,9 @@ export default function AdminDashboardPreview() {
       addDebugInfo('Detecting available cameras...');
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      
-      setAvailableCameras(videoDevices);
       addDebugInfo(`Found ${videoDevices.length} camera(s)`);
-      
       return videoDevices;
-    } catch (error) {
+    } catch (error: any) {
       addDebugInfo(`Camera detection failed: ${error.message}`);
       return [];
     }
@@ -69,16 +62,11 @@ export default function AdminDashboardPreview() {
   const requestPermissionFirst = async () => {
     try {
       addDebugInfo('Requesting basic camera permission...');
-      
-      // First, request basic permission
       const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // Stop it immediately, we just wanted permission
       tempStream.getTracks().forEach(track => track.stop());
-      
       addDebugInfo('Basic permission granted');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       addDebugInfo(`Permission request failed: ${error.name}`);
       return false;
     }
@@ -89,177 +77,73 @@ export default function AdminDashboardPreview() {
     
     setIsInitializing(true);
     setCameraError(null);
-    
-    const currentRetry = forceRetry ? 0 : retryCount;
-    setRetryCount(currentRetry + 1);
+    setRetryCount(currentRetry => currentRetry + 1);
 
     try {
       addDebugInfo('Starting camera initialization...');
-
-      // Check basic browser support
-      if (!navigator.mediaDevices) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('MediaDevices not supported. Try Chrome, Firefox, or Safari.');
       }
 
-      if (!navigator.mediaDevices.getUserMedia) {
-        throw new Error('getUserMedia not supported. Update your browser.');
-      }
-
-      // Detect cameras first
-      const cameras = await detectCameras();
-      
-      // Request basic permission if we don't have it
       const hasPermission = await requestPermissionFirst();
       if (!hasPermission) {
         throw new Error('Camera permission denied by user');
       }
 
-      // Re-detect cameras after permission (they should have labels now)
-      await detectCameras();
+      await detectCameras(); // To get labels
 
-      // Define constraint sets to try
       const constraintSets = [];
-      
-      // If specific camera requested
       if (cameraId) {
-        constraintSets.push({
-          video: { deviceId: { exact: cameraId }, width: { ideal: 640 }, height: { ideal: 480 } }
-        });
+        constraintSets.push({ video: { deviceId: { exact: cameraId }, width: { ideal: 640 }, height: { ideal: 480 } } });
       }
-
-      // Add various fallback constraints
       constraintSets.push(
-        // Rear camera exact
         { video: { facingMode: { exact: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
-        // Rear camera preferred  
         { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
-        // Front camera
         { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } },
-        // Any camera with resolution
         { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
-        // Any camera with lower resolution
         { video: { width: { ideal: 320 }, height: { ideal: 240 } } },
-        // Minimal constraints
         { video: true }
       );
 
-      let stream = null;
-      let workingConstraints = null;
-
-      for (let i = 0; i < constraintSets.length; i++) {
-        const constraints = constraintSets[i];
-        
+      let stream: MediaStream | null = null;
+      for (const constraints of constraintSets) {
         try {
-          addDebugInfo(`Trying constraint set ${i + 1}/${constraintSets.length}`);
-          console.log('Trying constraints:', constraints);
-          
           stream = await navigator.mediaDevices.getUserMedia(constraints);
-          workingConstraints = constraints;
-          addDebugInfo(`Success with constraint set ${i + 1}`);
           break;
-          
-        } catch (error) {
-          addDebugInfo(`Constraint set ${i + 1} failed: ${error.name}`);
-          
-          if (error.name === 'NotAllowedError' && i === 0) {
-            // If first attempt fails with permission, don't try others
-            throw error;
-          }
-          continue;
+        } catch (error: any) {
+          addDebugInfo(`Constraint set failed: ${error.name}`);
         }
       }
 
-      if (!stream) {
-        throw new Error('All camera constraint attempts failed');
-      }
+      if (!stream) throw new Error('All camera constraint attempts failed');
 
-      // Store the stream
       streamRef.current = stream;
-      
-      // Get video track info
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        const settings = videoTrack.getSettings();
-        addDebugInfo(`Using: ${videoTrack.label} (${settings.width}x${settings.height})`);
-      }
-
-      // Set up video element
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        
-        // Handle video events
-        const video = videoRef.current;
-        
-        const handleLoadedMetadata = () => {
-          addDebugInfo('Video metadata loaded');
-          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        };
-        
-        const handleCanPlay = () => {
-          addDebugInfo('Video can play');
-          video.removeEventListener('canplay', handleCanPlay);
-        };
-        
-        video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        video.addEventListener('canplay', handleCanPlay);
-        
-        // Start playing
-        try {
-          await video.play();
-          addDebugInfo('Video playing successfully');
-        } catch (playError) {
-          addDebugInfo(`Video play error: ${playError.message}`);
-          // Try to play anyway, some browsers are strict
-        }
+        await videoRef.current.play();
       }
       
       setHasCameraPermission(true);
-      setIsInitializing(false);
       addDebugInfo('Camera setup complete!');
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera error:', error);
       addDebugInfo(`Fatal error: ${error.message}`);
-      
       setHasCameraPermission(false);
-      setIsInitializing(false);
-      
-      // Detailed error messages
       let errorMessage = '';
-      
       switch (error.name) {
-        case 'NotAllowedError':
-          errorMessage = 'Camera permission denied. Please click the camera icon in your browser\'s address bar and allow camera access, then refresh the page.';
-          break;
-        case 'NotFoundError':
-          errorMessage = 'No camera found. Please connect a camera and refresh the page.';
-          break;
-        case 'NotSupportedError':
-          errorMessage = 'Camera not supported. Please use Chrome, Firefox, Safari, or Edge browser.';
-          break;
-        case 'NotReadableError':
-          errorMessage = 'Camera is busy. Please close other applications using the camera and try again.';
-          break;
-        case 'OverconstrainedError':
-          errorMessage = 'Camera settings not supported. Trying with basic settings...';
-          break;
-        case 'SecurityError':
-          errorMessage = 'Camera blocked by security policy. Please enable camera access in browser settings.';
-          break;
-        default:
-          errorMessage = `Camera error: ${error.message}. Try refreshing the page or using a different browser.`;
+        case 'NotAllowedError': errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.'; break;
+        case 'NotFoundError': errorMessage = 'No camera found. Please connect a camera and try again.'; break;
+        default: errorMessage = `Camera error: ${error.message}. Try refreshing the page.`;
       }
-      
       setCameraError(errorMessage);
+    } finally {
+      setIsInitializing(false);
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop();
-        addDebugInfo(`Stopped ${track.kind} track`);
-      });
+      streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
     if (videoRef.current) {
@@ -275,7 +159,7 @@ export default function AdminDashboardPreview() {
     setScannerOpen(true);
     setDebugInfo([]);
     addDebugInfo('Scanner opened');
-    setTimeout(() => startCamera(), 100); // Small delay to ensure dialog is open
+    setTimeout(() => startCamera(), 100);
   };
 
   const stopScanner = () => {
@@ -285,7 +169,6 @@ export default function AdminDashboardPreview() {
     setIsInitializing(false);
   };
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -295,24 +178,45 @@ export default function AdminDashboardPreview() {
   }, []);
 
   const simulateQRScan = () => {
+    if (stationBookings.length === 0) {
+      toast({ variant: "destructive", title: "No Bookings", description: "There are no pending bookings to simulate a scan for." });
+      return;
+    }
     const mockQRData = {
-      bookingId: "BK-001",
-      user: "John Doe",
-      kwh: 25.5,
-      chargerId: "CHG-001"
+      bookingId: stationBookings[0].id,
+      user: stationBookings[0].userName,
+      kwh: stationBookings[0].kwh,
+      chargerId: stationBookings[0].chargerId,
     };
     setScannedData(mockQRData);
     stopScanner();
   };
 
   const confirmChargeStart = () => {
-    alert(`Charge started for ${scannedData.user}!`);
+    if (!scannedData) return;
+    const chargeTimeMinutes = Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60);
+
+    const activated = activateBooking(scannedData.bookingId, scannedData.chargerId, chargeTimeMinutes);
+
+    if (activated) {
+        toast({ title: "Charge Started!", description: `Session for ${scannedData.user} has begun.` });
+    } else {
+        toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found or already active." });
+    }
     setScannedData(null);
   };
 
   const openCameraSettings = () => {
     alert('To fix camera issues:\n\n1. Check browser permissions (click 🔒 or camera icon in address bar)\n2. Refresh this page\n3. Close other apps using camera\n4. Try different browser\n5. Restart browser\n6. Check system camera settings');
   };
+
+  if (!admin) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Loading admin data or redirecting...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -326,7 +230,7 @@ export default function AdminDashboardPreview() {
             <QrCode className="mr-2 h-4 w-4" />
             Scan Ticket
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={adminLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
@@ -354,10 +258,10 @@ export default function AdminDashboardPreview() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map(booking => (
+                  {stationBookings.length > 0 ? stationBookings.map(booking => (
                     <tr key={booking.id} className="border-b hover:bg-muted">
                       <td className='p-3 font-medium'>{booking.userName}</td>
-                      <td className='p-3'>{new Date(booking.date).toLocaleString()}</td>
+                      <td className='p-3'>{format(new Date(booking.date), 'MMM d, h:mm a')}</td>
                       <td className='p-3'>
                         <Badge variant={booking.status === 'pending' ? 'secondary' : 'default'} 
                                className={booking.status === 'active' ? 'bg-green-500 text-white' : ''}>
@@ -367,7 +271,13 @@ export default function AdminDashboardPreview() {
                       <td className='p-3'>{booking.kwh.toFixed(2)}</td>
                       <td className='p-3'>₹{booking.cost.toFixed(2)}</td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="text-center h-24 text-muted-foreground">
+                        No bookings found for this station yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -399,7 +309,6 @@ export default function AdminDashboardPreview() {
                   controls={false}
                 />
                 
-                {/* QR Code Detection Overlay */}
                 <div className="absolute inset-8 border-2 border-primary rounded-lg pointer-events-none animate-pulse">
                   <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary/70 rounded-tl-lg"></div>
                   <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary/70 rounded-tr-lg"></div>
@@ -407,7 +316,6 @@ export default function AdminDashboardPreview() {
                   <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary/70 rounded-br-lg"></div>
                 </div>
                 
-                {/* Instructions and Controls */}
                 <div className="absolute bottom-2 left-2 right-2 bg-black/80 text-white p-3 rounded-lg">
                   <p className="text-xs mb-2 text-center">Hold steady - Scanning for QR code...</p>
                   <div className="flex gap-2">
@@ -431,7 +339,6 @@ export default function AdminDashboardPreview() {
               </div>
             )}
 
-            {/* Loading State */}
             {isInitializing && (
               <div className='absolute inset-0 flex items-center justify-center bg-background/95'>
                 <div className='text-center p-4'>
@@ -445,7 +352,6 @@ export default function AdminDashboardPreview() {
               </div>
             )}
 
-            {/* Camera Error State */}
             {hasCameraPermission === false && (
               <div className='absolute inset-0 flex items-center justify-center p-4 bg-background/95'>
                 <div className="w-full max-w-sm">
@@ -489,7 +395,6 @@ export default function AdminDashboardPreview() {
               </div>
             )}
 
-            {/* Initial State */}
             {hasCameraPermission === null && !isInitializing && (
               <div className='absolute inset-0 flex items-center justify-center p-4 bg-background/95'>
                 <div className='text-center'>
@@ -508,7 +413,6 @@ export default function AdminDashboardPreview() {
             )}
           </div>
           
-          {/* Debug Info */}
           {debugInfo.length > 0 && (
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <h4 className="text-xs font-medium mb-2">Debug Info:</h4>
@@ -572,7 +476,7 @@ export default function AdminDashboardPreview() {
                 <div>
                   <p className='text-xs text-muted-foreground'>Estimated Time</p>
                   <p className='font-bold'>
-                    ~{Math.round((scannedData.kwh / 7.2) * 60)} minutes
+                    ~{Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60)} minutes
                   </p>
                 </div>
               </div>
