@@ -23,8 +23,8 @@ const FloatingParticles = () => {
       key: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 5}s`,
-      animationDuration: `${5 + Math.random() * 5}s`
+      animationDelay: Math.random() * 5,
+      animationDuration: 5 + Math.random() * 5
     })));
   }, []);
 
