@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Logo } from '@/components/icons/logo';
 import placeholderImages from '@/lib/placeholder-images.json';
+import { motion } from 'framer-motion';
 
 const { evChargingStation } = placeholderImages;
 
@@ -18,26 +19,35 @@ const FloatingParticles = () => {
   const [particles, setParticles] = useState<any[]>([]);
 
   useEffect(() => {
-    setParticles([...Array(80)].map((_, i) => ({
+    setParticles([...Array(20)].map((_, i) => ({
       key: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 3}s`,
-      animationDuration: `${3 + Math.random() * 2}s`
+      animationDelay: `${Math.random() * 5}s`,
+      animationDuration: `${5 + Math.random() * 5}s`
     })));
   }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map(p => (
-        <div
+        <motion.div
           key={p.key}
-          className="absolute w-2 h-2 bg-primary/20 rounded-full animate-pulse"
+          className="absolute w-1 h-1 bg-primary/20 rounded-full"
           style={{
             left: p.left,
             top: p.top,
-            animationDelay: p.animationDelay,
-            animation: `float ${p.animationDuration} ease-in-out infinite alternate`,
+          }}
+          animate={{
+            y: [0, -20, 0],
+            x: [0, 10, 0],
+            opacity: [0, 0.8, 0],
+          }}
+          transition={{
+            duration: p.animationDuration,
+            delay: p.animationDelay,
+            repeat: Infinity,
+            ease: "easeInOut"
           }}
         />
       ))}
@@ -45,135 +55,7 @@ const FloatingParticles = () => {
   );
 };
 
-const NetworkAnimation = () => {
-  const [nodes, setNodes] = useState<{ id: number; x: number; y: number; size: number; delay: number; }[]>([]);
-  const [connections, setConnections] = useState<{ from: any; to: any; opacity: number; }[]>([]);
-
-  useEffect(() => {
-    const generatedNodes = [...Array(12)].map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: 4 + Math.random() * 4,
-      delay: Math.random() * 3
-    }));
-
-    const generatedConnections: { from: typeof generatedNodes[0], to: typeof generatedNodes[0], opacity: number }[] = [];
-    for (let i = 0; i < generatedNodes.length; i++) {
-      for (let j = i + 1; j < generatedNodes.length; j++) {
-        const distance = Math.sqrt(
-          Math.pow(generatedNodes[i].x - generatedNodes[j].x, 2) + 
-          Math.pow(generatedNodes[i].y - generatedNodes[j].y, 2)
-        );
-        if (distance < 35) {
-          generatedConnections.push({
-            from: generatedNodes[i],
-            to: generatedNodes[j],
-            opacity: Math.max(0.1, 1 - distance / 35)
-          });
-        }
-      }
-    }
-    setNodes(generatedNodes);
-    setConnections(generatedConnections);
-  }, []);
-
-  if (nodes.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {/* Connection Lines */}
-        {connections.map((connection, idx) => (
-          <line
-            key={idx}
-            x1={`${connection.from.x}%`}
-            y1={`${connection.from.y}%`}
-            x2={`${connection.to.x}%`}
-            y2={`${connection.to.y}%`}
-            stroke="hsl(var(--primary-foreground) / 0.3)"
-            strokeWidth="0.1"
-            className="animate-networkPulse"
-            style={{
-              animationDelay: `${idx * 0.2}s`,
-              strokeOpacity: connection.opacity
-            }}
-          />
-        ))}
-        
-        {/* Network Nodes */}
-        {nodes.map((node) => (
-          <circle
-            key={node.id}
-            cx={`${node.x}%`}
-            cy={`${node.y}%`}
-            r={node.size / 10}
-            fill="hsl(var(--primary-foreground) / 0.6)"
-            className="animate-networkNode"
-            style={{ animationDelay: `${node.delay}s` }}
-          />
-        ))}
-        
-        {/* Data Packets */}
-        {connections.slice(0, 6).map((connection, idx) => (
-          <circle
-            key={`packet-${idx}`}
-            r="0.3"
-            fill="hsl(var(--primary))"
-            className="animate-dataPacket"
-            style={{
-              animationDelay: `${idx * 0.8}s`
-            }}
-          >
-            <animateMotion
-              dur="4s"
-              repeatCount="indefinite"
-              begin={`${idx * 0.8}s`}
-            >
-              <mpath href={`#path-${idx}`} />
-            </animateMotion>
-          </circle>
-        ))}
-        
-        {/* Hidden paths for data packet animation */}
-        <defs>
-          {connections.slice(0, 6).map((connection, idx) => (
-            <path
-              key={`path-${idx}`}
-              id={`path-${idx}`}
-              d={`M ${connection.from.x} ${connection.from.y} L ${connection.to.x} ${connection.to.y}`}
-              fill="none"
-              stroke="none"
-            />
-          ))}
-        </defs>
-      </svg>
-      
-      {/* Floating Network Elements */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`floating-${i}`}
-          className="absolute animate-floatingNetwork"
-          style={{
-            left: `${Math.random() * 90 + 5}%`,
-            top: `${Math.random() * 80 + 10}%`,
-            animationDelay: `${Math.random() * 4}s`,
-            animationDuration: `${6 + Math.random() * 4}s`
-          }}
-        >
-          <div className="w-6 h-6 bg-primary/20 rounded-lg flex items-center justify-center backdrop-blur-sm border border-primary/30">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const ValueDemonstrationSection = () => {
-  const [activeDemo, setActiveDemo] = useState(0);
   
   const demos = [
     {
@@ -196,314 +78,199 @@ const ValueDemonstrationSection = () => {
     }
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveDemo((prev) => (prev + 1) % demos.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [demos.length]);
-
   return (
-    <section className="py-20 bg-muted/20 dark:bg-muted/10 relative overflow-hidden">
-      <div className="max-w-6xl mx-auto px-6">
+    <motion.section 
+      className="py-20 bg-muted/20 dark:bg-muted/10 relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            See The Difference ChargeSmart Makes
+            The ChargeSmart Difference
           </h2>
-          <p className="text-xl text-muted-foreground">Experience the transformation from frustration to seamless charging</p>
+          <p className="text-xl text-muted-foreground">From frustrating to seamless charging.</p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Before/After Comparison */}
-          <div className="space-y-8">
-            {demos.map((demo, index) => (
-              <div 
+          {demos.map((demo, index) => (
+              <motion.div 
                 key={index}
-                className={`transform transition-all duration-1000 ${
-                  activeDemo === index 
-                    ? 'opacity-100 translate-x-0 scale-100' 
-                    : 'opacity-40 translate-x-4 scale-95'
-                }`}
-              >
-                <div className={`p-8 rounded-2xl ${
+                className={`p-8 rounded-2xl ${
                   index === 0 ? 'bg-red-500/10 border-2 border-red-500/20' : 'bg-green-500/10 border-2 border-green-500/20'
-                }`}>
-                  <h3 className="text-2xl font-bold mb-6 text-foreground">{demo.title}</h3>
-                  <div className="space-y-4">
-                    {(demo.problems || demo.solutions || []).map((item, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center gap-3 animate-fadeInUp"
-                        style={{ animationDelay: `${idx * 0.2}s` }}
-                      >
-                        <item.icon className={`w-6 h-6 ${item.color}`} />
-                        <span className="text-foreground/90 font-medium">{item.text}</span>
-                      </div>
-                    ))}
-                  </div>
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <h3 className="text-2xl font-bold mb-6 text-foreground">{demo.title}</h3>
+                <div className="space-y-4">
+                  {(demo.problems || demo.solutions || []).map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3"
+                    >
+                      <item.icon className={`w-6 h-6 ${item.color}`} />
+                      <span className="text-foreground/90 font-medium">{item.text}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
-          
-          {/* Animated Visual Demo */}
-          <div className="relative">
-            <div className="bg-background rounded-2xl shadow-2xl p-8 relative overflow-hidden">
-              {/* Phone Mockup */}
-              <div className="mx-auto w-64 h-96 bg-foreground/90 rounded-3xl p-2 relative animate-phoneFloat">
-                <div className="w-full h-full bg-primary rounded-2xl relative overflow-hidden">
-                  
-                  {/* App Interface Animation */}
-                  <div className="p-4 text-primary-foreground">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-bold text-lg">ChargeSmart</h4>
-                      <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
-                    </div>
-                    
-                    {/* Search Animation */}
-                    <div className="bg-white/20 rounded-lg p-3 mb-4 animate-searchPulse">
-                      <div className="text-sm">🔍 Finding stations near you...</div>
-                      <div className="w-full bg-white/30 h-1 rounded-full mt-2">
-                        <div className="bg-white h-1 rounded-full animate-progressBar"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Station Cards */}
-                    <div className="space-y-2">
-                      {[1, 2, 3].map((i) => (
-                        <div 
-                          key={i}
-                          className="bg-white/20 rounded-lg p-3 animate-slideInUp"
-                          style={{ animationDelay: `${i * 0.3}s` }}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="text-xs font-semibold">Station {i}</div>
-                              <div className="text-xs opacity-80">Available • 2.{i}km</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-xs">₹{12 + i}/min</div>
-                              <div className="text-xs text-green-300">Book Now</div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Success Animation */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="bg-green-500 text-white text-center py-2 px-4 rounded-lg animate-successPop">
-                      ✅ Booking Confirmed!
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Floating Benefits */}
-              {[
-                { text: "Save 30% on charging", position: "top-4 right-4", delay: "0s" },
-                { text: "Zero wait time", position: "bottom-20 left-4", delay: "1s" },
-                { text: "AI optimized route", position: "top-20 left-4", delay: "2s" }
-              ].map((benefit, idx) => (
-                <div
-                  key={idx}
-                  className={`absolute ${benefit.position} bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium animate-floatingBenefit shadow-lg`}
-                  style={{ animationDelay: benefit.delay }}
-                >
-                  {benefit.text}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };
+
 
 const LiveStatsSection = () => {
-  const [stats, setStats] = useState({
-    activeUsers: 1250,
-    chargingSessions: 892,
-    moneySaved: 45230,
-    co2Reduced: 12.8
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        activeUsers: prev.activeUsers + Math.floor(Math.random() * 5),
-        chargingSessions: prev.chargingSessions + Math.floor(Math.random() * 3),
-        moneySaved: prev.moneySaved + Math.floor(Math.random() * 100),
-        co2Reduced: prev.co2Reduced + (Math.random() * 0.1)
-      }));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <section className="py-16 bg-background dark:bg-card/20 text-foreground relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/30 animate-gradientShift opacity-30 dark:opacity-100"></div>
-      </div>
-      
-      <div className="max-w-6xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Live Impact Dashboard</h2>
-          <p className="text-xl text-muted-foreground">See the real-time impact ChargeSmart is making</p>
-        </div>
-        
-        <div className="grid md:grid-cols-4 gap-8">
-          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-blue-400" />
-            </div>
-            <div className="text-3xl font-bold text-blue-400 animate-countUp">{stats.activeUsers.toLocaleString()}</div>
-            <div className="text-muted-foreground mt-2">Active Users Today</div>
+    const [stats, setStats] = useState({
+      activeUsers: 1250,
+      chargingSessions: 892,
+      moneySaved: 45230,
+      co2Reduced: 12.8,
+    });
+  
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setStats((prev) => ({
+          activeUsers: prev.activeUsers + Math.floor(Math.random() * 2),
+          chargingSessions: prev.chargingSessions + 1,
+          moneySaved: prev.moneySaved + Math.floor(Math.random() * 50),
+          co2Reduced: prev.co2Reduced + Math.random() * 0.05,
+        }));
+      }, 3000);
+      return () => clearInterval(interval);
+    }, []);
+  
+    const statItems = [
+      {
+        icon: Users,
+        value: stats.activeUsers.toLocaleString(),
+        label: 'Active Users Today',
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/20',
+      },
+      {
+        icon: Zap,
+        value: stats.chargingSessions.toLocaleString(),
+        label: 'Charging Sessions',
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/20',
+      },
+      {
+        icon: DollarSign,
+        value: `₹${stats.moneySaved.toLocaleString()}`,
+        label: 'Money Saved Today',
+        color: 'text-yellow-400',
+        bgColor: 'bg-yellow-500/20',
+      },
+      {
+        icon: Battery,
+        value: `${stats.co2Reduced.toFixed(1)}T`,
+        label: 'CO₂ Reduced',
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-500/20',
+      },
+    ];
+  
+    return (
+      <section className="py-16 bg-background dark:bg-card/20 text-foreground relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/20 animate-pulse opacity-30 dark:opacity-100"></div>
+  
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Live Impact Dashboard</h2>
+            <p className="text-xl text-muted-foreground">
+              See the real-time impact ChargeSmart is making.
+            </p>
           </div>
-          
-          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-8 h-8 text-green-400" />
-            </div>
-            <div className="text-3xl font-bold text-green-400 animate-countUp">{stats.chargingSessions.toLocaleString()}</div>
-            <div className="text-muted-foreground mt-2">Charging Sessions</div>
-          </div>
-          
-          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
-            <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-yellow-400" />
-            </div>
-            <div className="text-3xl font-bold text-yellow-400 animate-countUp">₹{stats.moneySaved.toLocaleString()}</div>
-            <div className="text-muted-foreground mt-2">Money Saved Today</div>
-          </div>
-          
-          <div className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10 animate-statCard">
-            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Battery className="w-8 h-8 text-purple-400" />
-            </div>
-            <div className="text-3xl font-bold text-purple-400 animate-countUp">{stats.co2Reduced.toFixed(1)}T</div>
-            <div className="text-muted-foreground mt-2">CO₂ Reduced</div>
-          </div>
-        </div>
-        
-        {/* Live Activity Feed */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-center mb-8">Live Activity Feed</h3>
-          <div className="max-w-2xl mx-auto bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/10">
-            <div className="space-y-4">
-              {[
-                "🚗 User booked Station A in Mumbai - Saved ₹120",
-                "⚡ Fast charging completed at Delhi Hub - 45 minutes",
-                "🎯 AI found optimal route - 25% cost reduction",
-                "✅ Booking confirmed for Bangalore Station B",
-                "🔋 User charging at Pune Mall - 80% complete"
-              ].map((activity, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg animate-activityFeed"
-                  style={{ animationDelay: `${idx * 0.5}s` }}
+  
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {statItems.map((item, index) => (
+              <motion.div
+                key={index}
+                className="text-center p-6 bg-background/50 dark:bg-card/50 backdrop-blur-sm rounded-2xl border border-border/10"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <div
+                  className={`w-16 h-16 ${item.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}
                 >
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-muted-foreground">{activity}</span>
-                  <span className="text-xs text-muted-foreground/80 ml-auto">now</span>
+                  <item.icon className={`w-8 h-8 ${item.color}`} />
                 </div>
-              ))}
-            </div>
+                <div className={`text-3xl font-bold ${item.color}`}>{item.value}</div>
+                <div className="text-muted-foreground mt-2">{item.label}</div>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </div>
-    </section>
-  );
-};
+      </section>
+    );
+  };
+  
 
 const UserJourneyAnimation = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  
-  const journeySteps = [
-    {
-      title: "User Opens App",
-      description: "Looking for nearby charging stations",
-      visual: "📱",
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      title: "AI Finds Best Options", 
-      description: "Smart algorithm analyzes price, distance & availability",
-      visual: "🤖",
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      title: "Books Optimal Slot",
-      description: "Reserves the perfect charging time & location",
-      visual: "📅",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      title: "Seamless Payment",
-      description: "Secure in-app payment with best rates",
-      visual: "💳",
-      color: "from-yellow-500 to-yellow-600"
-    },
-    {
-      title: "Arrives & Charges",
-      description: "QR code access, no waiting, smart notifications",
-      visual: "⚡",
-      color: "from-cyan-500 to-cyan-600"
-    }
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % journeySteps.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [journeySteps.length]);
+    const journeySteps = [
+        {
+          title: "Find a Station",
+          description: "Open the app to see nearby chargers on the live map.",
+          icon: MapPin,
+        },
+        {
+          title: "Optimize & Book", 
+          description: "Let AI find the best price and time, then book your slot.",
+          icon: Bot,
+        },
+        {
+          title: "Pay & Get Ticket",
+          description: "Securely pay in-app and receive a QR code ticket.",
+          icon: DollarSign,
+        },
+        {
+          title: "Arrive & Charge",
+          description: "Scan your ticket at the station and plug in. No waiting.",
+          icon: Zap,
+        }
+      ];
 
   return (
     <section className="py-20 bg-background">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            The Perfect User Journey
+            A Perfect Journey
           </h2>
-          <p className="text-xl text-muted-foreground">Watch how ChargeSmart transforms the charging experience</p>
+          <p className="text-xl text-muted-foreground">Four simple steps to a seamless charge.</p>
         </div>
         
-        {/* Journey Timeline */}
         <div className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-border/50 transform -translate-x-1/2"></div>
-          
-          <div className="space-y-16">
+          <div className="absolute left-1/2 top-0 h-full w-px bg-border -translate-x-1/2 hidden md:block" />
+            
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {journeySteps.map((step, idx) => (
-              <div 
+              <motion.div 
                 key={idx}
-                className={`flex items-center ${idx % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} gap-8`}
+                className="text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5, delay: idx * 0.15 }}
               >
-                <div className={`flex-1 ${idx % 2 === 0 ? 'text-right' : 'text-left'}`}>
-                  <div className={`inline-block p-8 rounded-2xl transition-all duration-1000 transform ${
-                    currentStep === idx 
-                      ? 'scale-110 shadow-2xl bg-gradient-to-r ' + step.color + ' text-white' 
-                      : 'scale-100 shadow-lg bg-card text-foreground'
-                  }`}>
-                    <div className="text-6xl mb-4">{step.visual}</div>
-                    <h3 className="text-2xl font-bold mb-2">{step.title}</h3>
-                    <p className={currentStep === idx ? 'text-white/90' : 'text-muted-foreground'}>
-                      {step.description}
-                    </p>
+                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                      <step.icon className="w-8 h-8" />
                   </div>
-                </div>
-                
-                <div className={`w-8 h-8 rounded-full border-4 transition-all duration-500 ${
-                  currentStep === idx 
-                    ? 'bg-primary border-primary scale-150' 
-                    : 'bg-background border-border'
-                }`}></div>
-                
-                <div className="flex-1"></div>
-              </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{step.title}</h3>
+                  <p className="text-muted-foreground">
+                    {step.description}
+                  </p>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -521,111 +288,6 @@ export default function ChargeSmart() {
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-background">
-            <style jsx>{`
-              @keyframes float {
-                0% { transform: translateY(0px) translateX(0px); opacity: 0.2; }
-                100% { transform: translateY(-20px) translateX(10px); opacity: 0.8; }
-              }
-              
-              @keyframes phoneFloat {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                50% { transform: translateY(-10px) rotate(2deg); }
-              }
-              
-              @keyframes searchPulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.05); opacity: 0.8; }
-              }
-              
-              @keyframes progressBar {
-                0% { width: 0%; }
-                50% { width: 70%; }
-                100% { width: 100%; }
-              }
-              
-              @keyframes slideInUp {
-                0% { opacity: 0; transform: translateY(20px); }
-                100% { opacity: 1; transform: translateY(0px); }
-              }
-              
-              @keyframes successPop {
-                0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-                20% { opacity: 1; transform: scale(1.1) translateY(0px); }
-                100% { opacity: 1; transform: scale(1) translateY(0px); }
-              }
-              
-              @keyframes floatingBenefit {
-                0%, 100% { transform: translateY(0px) scale(1); opacity: 0.9; }
-                50% { transform: translateY(-10px) scale(1.05); opacity: 1; }
-              }
-              
-              @keyframes fadeInUp {
-                0% { opacity: 0; transform: translateY(30px); }
-                100% { opacity: 1; transform: translateY(0px); }
-              }
-              
-              @keyframes gradientShift {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-              }
-              
-              @keyframes statCard {
-                0% { opacity: 0; transform: translateY(30px) scale(0.9); }
-                100% { opacity: 1; transform: translateY(0px) scale(1); }
-              }
-              
-              @keyframes countUp {
-                0% { opacity: 0; }
-                100% { opacity: 1; }
-              }
-              
-              @keyframes activityFeed {
-                0% { opacity: 0; transform: translateX(-20px); }
-                100% { opacity: 1; transform: translateX(0px); }
-              }
-              
-              @keyframes networkPulse {
-                0%, 100% { opacity: 0.3; stroke-width: 0.1; }
-                50% { opacity: 0.8; stroke-width: 0.2; }
-              }
-              
-              @keyframes networkNode {
-                0%, 100% { opacity: 0.6; transform: scale(1); }
-                50% { opacity: 1; transform: scale(1.2); }
-              }
-              
-              @keyframes dataPacket {
-                0% { opacity: 0; transform: scale(0.5); }
-                10% { opacity: 1; transform: scale(1); }
-                90% { opacity: 1; transform: scale(1); }
-                100% { opacity: 0; transform: scale(0.5); }
-              }
-              
-              @keyframes floatingNetwork {
-                0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.7; }
-                25% { transform: translateY(-15px) translateX(10px) rotate(90deg); opacity: 1; }
-                50% { transform: translateY(-5px) translateX(-10px) rotate(180deg); opacity: 0.8; }
-                75% { transform: translateY(-20px) translateX(5px) rotate(270deg); opacity: 1; }
-              }
-              
-              .animate-phoneFloat { animation: phoneFloat 4s ease-in-out infinite; }
-              .animate-searchPulse { animation: searchPulse 2s ease-in-out infinite; }
-              .animate-progressBar { animation: progressBar 3s ease-in-out infinite; }
-              .animate-slideInUp { animation: slideInUp 0.8s ease-out forwards; }
-              .animate-successPop { animation: successPop 2s ease-out infinite 3s; }
-              .animate-floatingBenefit { animation: floatingBenefit 3s ease-in-out infinite; }
-              .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
-              .animate-gradientShift { animation: gradientShift 8s ease infinite; background-size: 200% 200%; }
-              .animate-statCard { animation: statCard 0.8s ease-out forwards; }
-              .animate-countUp { animation: countUp 0.5s ease-out; }
-              .animate-activityFeed { animation: activityFeed 0.8s ease-out forwards; }
-              .animate-networkPulse { animation: networkPulse 3s ease-in-out infinite; }
-              .animate-networkNode { animation: networkNode 4s ease-in-out infinite; }
-              .animate-dataPacket { animation: dataPacket 4s ease-in-out infinite; }
-              .animate-floatingNetwork { animation: floatingNetwork 8s ease-in-out infinite; }
-            `}</style>
-
             {/* Animated Background Image with Overlay */}
             <div className="absolute inset-0 bg-background dark:bg-card">
               <div 
@@ -634,16 +296,13 @@ export default function ChargeSmart() {
                       backgroundImage: `url('https://images.unsplash.com/photo-1593941707874-ef25b8b4a92b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
                   }}
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-background dark:from-primary/20 dark:via-accent/10 dark:to-background"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5 dark:from-background dark:via-background dark:to-primary/10"></div>
             </div>
-            {isClient && <>
-                <NetworkAnimation />
-                <FloatingParticles />
-            </>}
+            {isClient && <FloatingParticles />}
             
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b border-border/20 bg-background/30 backdrop-blur-lg">
-                <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+                <div className="container mx-auto flex justify-between items-center px-6 py-4">
                     <Link href="/" className="flex items-center gap-3">
                         <Logo />
                         <span className="text-2xl font-bold text-foreground">ChargeSmart</span>
@@ -663,19 +322,35 @@ export default function ChargeSmart() {
             <main className="relative z-10">
                 {/* Hero Section */}
                 <section className="text-center px-6 py-20">
-                    <div className="max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight tracking-tight">
+                    <div className="container mx-auto max-w-4xl">
+                        <motion.h1 
+                            className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight tracking-tight"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7 }}
+                        >
                             Seamless EV Charging,<br />
                             <span className="text-primary">Intelligently Managed</span>
-                        </h1>
-                        <p className="text-xl md:text-2xl max-w-3xl mx-auto text-muted-foreground mb-10 leading-relaxed font-light">
+                        </motion.h1>
+                        <motion.p 
+                            className="text-xl md:text-2xl max-w-3xl mx-auto text-muted-foreground mb-10 leading-relaxed font-light"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.2 }}
+                        >
                             ChargeSmart is your ultimate companion for finding, booking, and optimizing your electric vehicle charging. Spend less time waiting and more time driving.
-                        </p>
-                        <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all transform hover:scale-105 shadow-lg">
-                           <Link href="/register">
-                             Get Started <ArrowRight className="ml-3 h-6 w-6" />
-                           </Link>
-                        </Button>
+                        </motion.p>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.4 }}
+                        >
+                            <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all transform hover:scale-105 shadow-lg">
+                               <Link href="/register">
+                                 Get Started <ArrowRight className="ml-3 h-6 w-6" />
+                               </Link>
+                            </Button>
+                        </motion.div>
                     </div>
                 </section>
 
@@ -690,7 +365,7 @@ export default function ChargeSmart() {
 
                 {/* Features Section - White Background */}
                 <section className="bg-muted/20 dark:bg-card/20 py-20 relative">
-                    <div className="max-w-7xl mx-auto px-6">
+                    <div className="container mx-auto px-6">
                         <h2 className="text-4xl font-bold text-foreground text-center mb-16">
                             Everything You Need for Smart Charging
                         </h2>
@@ -740,7 +415,7 @@ export default function ChargeSmart() {
 
                 {/* How It Works Section - Light Blue Background */}
                 <section className="bg-background py-20">
-                    <div className="max-w-7xl mx-auto px-6">
+                    <div className="container mx-auto px-6">
                         <div className="flex flex-col lg:flex-row items-center gap-16">
                             <div className="lg:w-1/2">
                                 <Image
@@ -797,7 +472,7 @@ export default function ChargeSmart() {
 
                 {/* CTA Section - Light Blue Background */}
                 <section className="bg-muted/30 py-20">
-                    <div className="max-w-4xl mx-auto text-center px-6">
+                    <div className="container mx-auto max-w-4xl text-center px-6">
                         <h2 className="text-4xl font-bold text-foreground mb-6">
                             Ready to Join the Smart Charging Revolution?
                         </h2>
@@ -815,7 +490,7 @@ export default function ChargeSmart() {
 
             {/* Footer - White Background */}
             <footer className="bg-card border-t border-border/50 py-8">
-                <div className="max-w-7xl mx-auto text-center px-6">
+                <div className="container mx-auto text-center px-6">
                     <p className="text-muted-foreground text-sm mb-4">
                         &copy; {new Date().getFullYear()} ChargeSmart. All rights reserved.
                     </p>
@@ -838,5 +513,7 @@ export default function ChargeSmart() {
         </div>
     );
 }
+
+    
 
     
