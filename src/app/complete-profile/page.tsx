@@ -22,14 +22,6 @@ export default function CompleteProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // If user lands here but already has a full name, redirect to dashboard.
-    // This handles cases where they try to access this page manually after completion.
-    if (user && user.name && user.name !== 'User') {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
-
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -57,6 +49,17 @@ export default function CompleteProfilePage() {
             <Loader2 className="h-12 w-12 text-primary animate-spin" />
             <p className="mt-4 text-muted-foreground">{loading ? 'Loading...' : 'Redirecting...'}</p>
         </div>
+    );
+  }
+  
+  // Redirect if profile is already complete
+  if (user && user.name && user.name !== 'User') {
+    router.push('/dashboard');
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <p className="mt-4 text-muted-foreground">Redirecting...</p>
+      </div>
     );
   }
 
