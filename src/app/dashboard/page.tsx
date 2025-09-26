@@ -1,10 +1,10 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Zap } from 'lucide-react';
 
 export default function DashboardPage() {

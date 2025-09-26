@@ -45,14 +45,18 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   }, [user, admin, loading, pathname, router]);
 
-  if (loading && !PUBLIC_ROUTES.includes(pathname) && pathname !== ADMIN_LOGIN_ROUTE) {
+  // We only show a global loader for non-public pages and non-admin pages
+  // to avoid flashes of the loader on public routes.
+  const showLoader = loading && !PUBLIC_ROUTES.includes(pathname) && !pathname.startsWith('/admin');
+
+  if (showLoader) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-background">
         <div className="flex items-center space-x-4">
           <Zap className="h-12 w-12 text-primary animate-pulse" />
           <h1 className="text-4xl font-headline font-bold text-primary">ChargeSmart</h1>
         </div>
-        <p className="mt-4 text-muted-foreground">Securing your session...</p>
+        <p className="mt-4 text-muted-foreground">Loading your session...</p>
       </div>
     );
   }
