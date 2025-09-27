@@ -59,12 +59,12 @@ export default function AboutPage() {
   };
   
   const teamMembers = [
-    { name: 'Sameer Bansode', hint: 'male developer' },
-    { name: 'Deep Biswas', hint: 'male engineer' },
-    { name: 'Madhura Raut', hint: 'female developer' },
-    { name: 'Vaishnavi Shirase', hint: 'female engineer' },
-    { name: 'Tanvi Singh', hint: 'female designer' },
-    { name: 'Johnsen Abraham', hint: 'male product manager' }
+    { name: 'Sameer Bansode', hint: 'male developer', imageUrl: `https://picsum.photos/seed/SameerBansode/200/200` },
+    { name: 'Deep Biswas', hint: 'male engineer', imageUrl: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxuYXR1cmUlMjB8ZW58MHx8fHwxNzU4OTQ1MzIwfDA&ixlib=rb-4.1.0&q=80&w=1080' },
+    { name: 'Madhura Raut', hint: 'female developer', imageUrl: `https://picsum.photos/seed/MadhuraRaut/200/200` },
+    { name: 'Vaishnavi Shirase', hint: 'female engineer', imageUrl: `https://picsum.photos/seed/VaishnaviShirase/200/200` },
+    { name: 'Tanvi Singh', hint: 'female designer', imageUrl: `https://picsum.photos/seed/TanviSingh/200/200` },
+    { name: 'Johnsen Abraham', hint: 'male product manager', imageUrl: `https://picsum.photos/seed/JohnsenAbraham/200/200` }
   ];
 
 
@@ -163,7 +163,7 @@ export default function AboutPage() {
                 <TeamMemberCard 
                   key={member.name}
                   name={member.name} 
-                  imageUrl={`https://picsum.photos/seed/${member.name.replace(' ', '')}/200/200`}
+                  imageUrl={member.imageUrl}
                   alt={`Portrait of ${member.name}`}
                   hint={member.hint}
                 />
