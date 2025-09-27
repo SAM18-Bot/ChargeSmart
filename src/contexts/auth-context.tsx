@@ -14,6 +14,8 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   User as FirebaseUser,
+  setPersistence,
+  browserSessionPersistence,
 } from 'firebase/auth';
 import { chargers } from '@/lib/data';
 
@@ -50,15 +52,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        handleSuccessfulAuth(firebaseUser);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    // Set persistence to 'session' to only keep user logged in for the session.
+    setPersistence(auth, browserSessionPersistence)
+      .then(() => {
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+          if (firebaseUser) {
+            handleSuccessfulAuth(firebaseUser);
+          } else {
+            setUser(null);
+          }
+          setLoading(false);
+        });
+        return () => unsubscribe();
+      })
+      .catch((error) => {
+        console.error("Error setting auth persistence:", error);
+        setLoading(false);
+      });
   }, []);
 
   const handleSuccessfulAuth = (firebaseUser: FirebaseUser) => {
@@ -75,11 +85,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    await setPersistence(auth, browserSessionPersistence);
     const result = await signInWithPopup(auth, provider);
     handleSuccessfulAuth(result.user);
   };
   
   const registerWithEmail = async (email: string, pass: string) => {
+    await setPersistence(auth, browserSessionPersistence);
     const result = await createUserWithEmailAndPassword(auth, email, pass);
     handleSuccessfulAuth(result.user);
   }
@@ -106,6 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signInWithEmail = async (email: string, pass: string) => {
+    await setPersistence(auth, browserSessionPersistence);
     const result = await signInWithEmailAndPassword(auth, email, pass);
     handleSuccessfulAuth(result.user);
   }
