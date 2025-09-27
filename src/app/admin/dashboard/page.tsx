@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from '@/components/ui/badge';
-import { LogOut, QrCode, Zap, Clock, User, Bell, AlertTriangle, Camera, CheckCircle, XCircle, RefreshCw, Settings } from 'lucide-react';
+import { LogOut, QrCode, Zap, Clock, User, Bell, AlertTriangle, Camera, CheckCircle, XCircle, RefreshCw, Settings, Mail, Ticket, IndianRupee } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useBookings } from '@/contexts/booking-context';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +51,8 @@ export default function AdminDashboardPage() {
   const handleScanSuccess = (result: QrScanner.ScanResult) => {
     try {
       const data = JSON.parse(result.data);
-      if (data.bookingId && data.user && data.kwh) {
+      // More robust check for all expected fields
+      if (data.bookingId && data.user && data.kwh && data.chargerId && data.email && data.amount && data.date) {
         setScannedData(data);
         stopScanner();
         toast({
@@ -62,7 +63,7 @@ export default function AdminDashboardPage() {
         toast({
           variant: 'destructive',
           title: "Invalid QR Code",
-          description: "The scanned code is not a valid booking ticket."
+          description: "The scanned code is not a valid booking ticket. It's missing some information."
         });
       }
     } catch (e) {
@@ -185,11 +186,16 @@ export default function AdminDashboardPage() {
       toast({ variant: "destructive", title: "No Bookings", description: "There are no pending bookings to simulate a scan for." });
       return;
     }
+    const bookingToSimulate = stationBookings[0];
     const mockQRData = {
-      bookingId: stationBookings[0].id,
-      user: stationBookings[0].userName,
-      kwh: stationBookings[0].kwh,
-      chargerId: stationBookings[0].chargerId,
+        bookingId: bookingToSimulate.id,
+        chargerId: bookingToSimulate.chargerId,
+        user: bookingToSimulate.userName,
+        email: 'user@example.com', // mock email
+        kwh: bookingToSimulate.kwh,
+        amount: bookingToSimulate.cost.toFixed(2),
+        date: format(new Date(bookingToSimulate.date), "PPpp"),
+        description: `Simulated charge: ${bookingToSimulate.kwh} kWh`
     };
     setScannedData(mockQRData);
     stopScanner();
@@ -204,7 +210,7 @@ export default function AdminDashboardPage() {
     if (activated) {
         toast({ title: "Charge Started!", description: `Session for ${scannedData.user} has begun.` });
     } else {
-        toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found or already active." });
+        toast({ variant: 'destructive', title: "Activation Failed", description: "Booking not found, already active, or charger is occupied." });
     }
     setScannedData(null);
   };
@@ -381,30 +387,55 @@ export default function AdminDashboardPage() {
           
           {scannedData && (
             <div className='space-y-4 py-4'>
-              <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                <User className='w-5 h-5 text-primary' />
-                <div>
-                  <p className='text-xs text-muted-foreground'>User</p>
-                  <p className='font-bold'>{scannedData.user}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className='flex items-center gap-3 p-3 bg-muted rounded-md col-span-2'>
+                    <User className='w-5 h-5 text-primary' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>User</p>
+                      <p className='font-bold'>{scannedData.user}</p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-3 p-3 bg-muted rounded-md col-span-2'>
+                    <Mail className='w-5 h-5 text-primary' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Email</p>
+                      <p className='font-bold'>{scannedData.email}</p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
+                    <Zap className='w-5 h-5 text-yellow-500' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Energy</p>
+                      <p className='font-bold'>{scannedData.kwh} kWh</p>
+                    </div>
+                  </div>
+                   <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
+                    <IndianRupee className='w-5 h-5 text-green-500' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Cost Paid</p>
+                      <p className='font-bold'>₹{scannedData.amount}</p>
+                    </div>
+                  </div>
+                   <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
+                    <Ticket className='w-5 h-5 text-blue-500' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Booking ID</p>
+                      <p className='font-mono text-xs'>{scannedData.bookingId}</p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
+                    <Clock className='w-5 h-5 text-purple-500' />
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Est. Time</p>
+                      <p className='font-bold'>
+                        ~{Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60)} minutes
+                      </p>
+                    </div>
+                  </div>
               </div>
-              
-              <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                <Zap className='w-5 h-5 text-yellow-500' />
-                <div>
-                  <p className='text-xs text-muted-foreground'>Energy</p>
-                  <p className='font-bold'>{scannedData.kwh} kWh</p>
-                </div>
-              </div>
-              
-              <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                <Clock className='w-5 h-5 text-green-500' />
-                <div>
-                  <p className='text-xs text-muted-foreground'>Estimated Time</p>
-                  <p className='font-bold'>
-                    ~{Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60)} minutes
-                  </p>
-                </div>
+              <div className="pt-2">
+                 <p className="text-xs text-muted-foreground text-center">{scannedData.description}</p>
+                 <p className="text-xs text-muted-foreground text-center">at {scannedData.chargerId}</p>
               </div>
             </div>
           )}
