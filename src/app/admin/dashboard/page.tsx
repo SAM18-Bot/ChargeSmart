@@ -53,6 +53,30 @@ export default function AdminDashboardPage() {
     setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
   }, []);
 
+  const stopScanner = useCallback(() => {
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+      scanTimeoutRef.current = null;
+    }
+    
+    scannerRef.current?.stop();
+    scannerRef.current?.destroy();
+    scannerRef.current = null;
+    
+    if (videoRef.current && videoRef.current.srcObject) {
+      (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      addDebugInfo('Camera stopped');
+    }
+    
+    setScannerOpen(false);
+    setIsScanning(false);
+    setScanSuccess(false);
+    lastScanTimeRef.current = 0;
+    scanStartTimeRef.current = 0;
+    scanCountRef.current = 0;
+  }, [addDebugInfo]);
+
   // Update scan statistics
   const updateScanStats = useCallback(() => {
     const now = Date.now();
@@ -145,7 +169,7 @@ export default function AdminDashboardPage() {
     } finally {
       setIsScanning(false);
     }
-  }, [addDebugInfo, toast, scanSuccess]);
+  }, [addDebugInfo, toast, scanSuccess, stopScanner]);
 
   // Optimized error handler - reduce noise
   const handleScanError = useCallback((error: any) => {
@@ -340,30 +364,6 @@ export default function AdminDashboardPage() {
       setIsInitializing(false);
     }
   };
-
-  const stopScanner = useCallback(() => {
-    if (scanTimeoutRef.current) {
-      clearTimeout(scanTimeoutRef.current);
-      scanTimeoutRef.current = null;
-    }
-    
-    scannerRef.current?.stop();
-    scannerRef.current?.destroy();
-    scannerRef.current = null;
-    
-    if (videoRef.current && videoRef.current.srcObject) {
-      (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      addDebugInfo('Camera stopped');
-    }
-    
-    setScannerOpen(false);
-    setIsScanning(false);
-    setScanSuccess(false);
-    lastScanTimeRef.current = 0;
-    scanStartTimeRef.current = 0;
-    scanCountRef.current = 0;
-  }, [addDebugInfo]);
   
   const handleOpenScanner = () => {
     setScannerOpen(true);
@@ -383,7 +383,7 @@ export default function AdminDashboardPage() {
         stopScanner();
       };
     }
-  }, [isScannerOpen]);
+  }, [isScannerOpen, stopScanner]);
 
   const handleDialogClose = (open: boolean) => {
     if (!open) {
