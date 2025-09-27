@@ -95,9 +95,7 @@ export default function AdminDashboardPage() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
-              facingMode: 'environment',
-              width: { ideal: 640 },
-              height: { ideal: 480 }
+              facingMode: 'environment'
             } 
         });
 
@@ -114,6 +112,7 @@ export default function AdminDashboardPage() {
                 onDecodeError: handleScanError,
                 highlightScanRegion: true,
                 highlightCodeOutline: true,
+                maxScansPerSecond: 10, // Increased scan frequency
                 calculateScanRegion: (video) => {
                     const videoWidth = video.videoWidth;
                     const videoHeight = video.videoHeight;
