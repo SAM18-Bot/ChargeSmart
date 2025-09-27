@@ -659,68 +659,57 @@ export default function AdminDashboardPage() {
         </DialogContent>
       </Dialog>
       
-      {/* Confirmation Dialog - unchanged */}
+      {/* Confirmation Dialog */}
       <Dialog open={!!scannedData} onOpenChange={() => setScannedData(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Charge Session</DialogTitle>
             <DialogDescription>
-              Verify the details below and start the charging session.
+              Verify the details from the scanned ticket before starting the session.
             </DialogDescription>
           </DialogHeader>
           
           {scannedData && (
             <div className='space-y-4 py-4'>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md col-span-2'>
-                  <User className='w-5 h-5 text-primary' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>User</p>
-                    <p className='font-bold'>{scannedData.user}</p>
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className='flex items-start justify-between'>
+                    <div>
+                      <p className='text-xs text-muted-foreground'>User</p>
+                      <p className='font-bold text-lg'>{scannedData.user}</p>
+                      <p className='text-xs text-muted-foreground'>{scannedData.email}</p>
+                    </div>
+                    <User className='w-8 h-8 text-primary' />
                   </div>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md col-span-2'>
-                  <Mail className='w-5 h-5 text-primary' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>Email</p>
-                    <p className='font-bold'>{scannedData.email}</p>
+                  <div className="border-t border-dashed my-2"></div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Booking ID</p>
+                      <p className='font-mono text-xs'>{scannedData.bookingId}</p>
+                    </div>
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Charger ID</p>
+                      <p className='font-mono text-xs'>{scannedData.chargerId}</p>
+                    </div>
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Energy</p>
+                      <p className='font-bold'>{scannedData.kwh} kWh</p>
+                    </div>
+                    <div>
+                      <p className='text-xs text-muted-foreground'>Amount Paid</p>
+                      <p className='font-bold'>₹{scannedData.amount}</p>
+                    </div>
                   </div>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                  <Zap className='w-5 h-5 text-yellow-500' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>Energy</p>
-                    <p className='font-bold'>{scannedData.kwh} kWh</p>
+                   <div className="border-t border-dashed my-2"></div>
+                   <div>
+                      <p className='text-xs text-muted-foreground'>Est. Time</p>
+                      <p className='font-bold'>~{Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60)} minutes</p>
+                    </div>
+                   <div className="pt-2 text-center">
+                    <p className="text-xs text-muted-foreground">{scannedData.description}</p>
                   </div>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                  <IndianRupee className='w-5 h-5 text-green-500' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>Cost Paid</p>
-                    <p className='font-bold'>₹{scannedData.amount}</p>
-                  </div>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                  <Ticket className='w-5 h-5 text-blue-500' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>Booking ID</p>
-                    <p className='font-mono text-xs'>{scannedData.bookingId}</p>
-                  </div>
-                </div>
-                <div className='flex items-center gap-3 p-3 bg-muted rounded-md'>
-                  <Clock className='w-5 h-5 text-purple-500' />
-                  <div>
-                    <p className='text-xs text-muted-foreground'>Est. Time</p>
-                    <p className='font-bold'>
-                      ~{Math.round((scannedData.kwh / CHARGER_POWER_KW) * 60)} minutes
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-2">
-                <p className="text-xs text-muted-foreground text-center">{scannedData.description}</p>
-                <p className="text-xs text-muted-foreground text-center">at {scannedData.chargerId}</p>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           )}
           
