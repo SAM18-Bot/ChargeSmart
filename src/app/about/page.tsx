@@ -60,7 +60,7 @@ export default function AboutPage() {
   
   const teamMembers = [
     { name: 'Sameer Bansode', hint: 'male developer', imageUrl: `https://picsum.photos/seed/SameerBansode/200/200` },
-    { name: 'Deep Biswas', hint: 'male engineer', imageUrl: `https://picsum.photos/seed/DeepBiswas/200/200` },
+    { name: 'Deep Biswas', hint: 'male engineer', imageUrl: `https://storage.googleapis.com/aifirebase/sc-b3a5d7c3-5a02-4e43-8517-576f62b66a4f.png` },
     { name: 'Madhura Raut', hint: 'female developer', imageUrl: `https://picsum.photos/seed/MadhuraRaut/200/200` },
     { name: 'Vaishnavi Shirase', hint: 'female engineer', imageUrl: `https://picsum.photos/seed/VaishnaviShirase/200/200` },
     { name: 'Tanvi Singh', hint: 'female designer', imageUrl: `https://picsum.photos/seed/TanviSingh/200/200` },
