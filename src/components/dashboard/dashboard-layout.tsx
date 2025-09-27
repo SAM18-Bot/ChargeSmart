@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +39,7 @@ export const CHARGER_POWER_KW = 22; // kW
 
 export interface PendingCharge {
     charger: Charger;
-    type: 'smart' | 'direct';
+    type: 'smart' | 'direct' | 'book';
     kwh: number;
     cost: number;
     evModel?: string;
@@ -201,33 +200,18 @@ export default function DashboardLayout({ user }: { user: User }) {
 
   const handleTimeSlotBooking = () => {
     if (!selectedCharger || !bookingDate || !bookingTime) return;
-
-    const [hours, minutes] = bookingTime.split(':').map(Number);
-    const bookingStart = set(bookingDate, { hours, minutes });
     
-    const booking: Booking = {
-      id: `booking-${Date.now()}`,
-      chargerId: selectedCharger.id,
-      userId: user.id,
-      userName: user.name,
-      date: bookingStart,
-      kwh: 0, // Not determined yet
-      cost: 0, // Not determined yet
-      status: 'pending',
-    };
+    const kwh = 0.1; // Placeholder small amount for initial booking fee/reservation
+    const cost = parseFloat((kwh * PRICE_PER_KWH).toFixed(2));
 
-    addBooking(booking);
-
-    toast({
-        title: "Slot Booked!",
-        description: `You have booked ${selectedCharger.name} for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}. A QR ticket will be generated upon payment.`,
-        duration: 9000,
+    initiatePayment({
+        charger: selectedCharger,
+        type: 'book',
+        kwh: kwh,
+        cost: cost,
     });
     
-    // For simplicity, we'll use the direct charge flow for payment after booking.
-    setActiveTab('direct');
-    setChargeModalOpen(true);
-    // Don't close and reset yet, let them choose kWh amount.
+    closeAndResetModal();
   }
 
   const closeAndResetModal = () => {
@@ -298,6 +282,12 @@ export default function DashboardLayout({ user }: { user: User }) {
   }
 
   const createPendingBooking = (chargeDetails: PendingCharge, transactionId: string) => {
+    let bookingDateValue = new Date();
+    if (chargeDetails.type === 'book' && bookingDate && bookingTime) {
+        const [hours, minutes] = bookingTime.split(':').map(Number);
+        bookingDateValue = set(bookingDate, { hours, minutes, seconds: 0, milliseconds: 0 });
+    }
+
     const booking: Booking = {
         id: transactionId,
         chargerId: chargeDetails.charger.id,
@@ -305,14 +295,35 @@ export default function DashboardLayout({ user }: { user: User }) {
         userName: user.name,
         kwh: chargeDetails.kwh,
         cost: chargeDetails.cost,
-        date: new Date(),
+        date: bookingDateValue,
         status: 'pending',
     };
     addBooking(booking);
+    
+    // NEW LOGIC: Mark the charger as 'Booked' immediately after payment to reflect reservation,
+    // but without starting the charge (which only happens upon admin scan).
+    setChargers(prev => prev.map(c => {
+        if (c.id === chargeDetails.charger.id) {
+             // Only change status if it was available. Do not overwrite 'Occupied'.
+             if (c.status === 'Available') {
+                 return { ...c, status: 'Booked' };
+             }
+        }
+        return c;
+    }));
 };
 
 
   const generateQrTicket = async (chargeDetails: PendingCharge, transactionId: string) => {
+    let description = '';
+    if (chargeDetails.type === 'book' && bookingDate && bookingTime) {
+        const [hours, minutes] = bookingTime.split(':').map(Number);
+        const bookingStart = set(bookingDate, { hours, minutes });
+        description = `Slot Booked for ${format(bookingStart, "MMM d, yyyy 'at' h:mm a")}`;
+    } else {
+        description = `Immediate charge: ${chargeDetails.kwh} kWh`;
+    }
+
     const ticketData = {
       bookingId: transactionId,
       chargerId: chargeDetails.charger.id,
@@ -321,6 +332,7 @@ export default function DashboardLayout({ user }: { user: User }) {
       kwh: chargeDetails.kwh,
       amount: chargeDetails.cost.toFixed(2),
       date: format(new Date(), "PPpp"),
+      description: description
     };
 
     try {
@@ -553,7 +565,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 </TabsContent>
                 <TabsContent value="book">
                     <div className="space-y-4 py-4">
-                        <p className="text-sm text-muted-foreground">Reserve this charger for a future time slot.</p>
+                        <p className="text-sm text-muted-foreground">Reserve this charger for a future time slot. (Small booking fee: ₹{(PRICE_PER_KWH * 0.1).toFixed(2)})</p>
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <Label>Date</Label>
@@ -578,7 +590,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleTimeSlotBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Book Slot</Button>
+                        <Button onClick={handleTimeSlotBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
               </Tabs>
