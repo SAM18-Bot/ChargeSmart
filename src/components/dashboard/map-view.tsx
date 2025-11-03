@@ -440,7 +440,7 @@ export function MapView({ chargers }: MapViewProps) {
                   title={charger.name}
                   icon={{
                     path: 'M13 10V3L4 14h7v7l9-11h-7z',
-                    fillColor: 'hsl(var(--accent))',
+                    fillColor: '#00FF00',
                     fillOpacity: 1,
                     strokeWeight: 1,
                     strokeColor: theme === 'dark' ? '#FFFFFF' : '#000000',
