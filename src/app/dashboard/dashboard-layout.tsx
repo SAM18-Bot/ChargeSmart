@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -199,9 +200,14 @@ export default function DashboardLayout({ user }: { user: User }) {
   }
 
   const handleTimeSlotBooking = () => {
-    if (!selectedCharger || !bookingDate || !bookingTime) return;
+    if (!selectedCharger || !bookingDate || !bookingTime || !kwhAmount) return;
     
-    const kwh = 0.1; // Placeholder small amount for initial booking fee/reservation
+    const kwh = parseFloat(kwhAmount);
+    if (isNaN(kwh) || kwh <= 0) {
+      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid kWh amount.'});
+      return;
+    }
+
     const cost = parseFloat((kwh * PRICE_PER_KWH).toFixed(2));
 
     initiatePayment({
@@ -210,8 +216,6 @@ export default function DashboardLayout({ user }: { user: User }) {
         kwh: kwh,
         cost: cost,
     });
-    
-    closeAndResetModal();
   }
 
   const closeAndResetModal = () => {
@@ -373,7 +377,6 @@ export default function DashboardLayout({ user }: { user: User }) {
 
   const handleQrModalClose = (isOpen: boolean) => {
       if (!isOpen) {
-          // Reset QR data when closing the modal to ensure UI is interactive
           setQrCodeData(null);
       }
       setQrModalOpen(isOpen);
@@ -573,7 +576,7 @@ export default function DashboardLayout({ user }: { user: User }) {
                 </TabsContent>
                 <TabsContent value="book">
                     <div className="space-y-4 py-4">
-                        <p className="text-sm text-muted-foreground">Reserve this charger for a future time slot. (Small booking fee: ₹{(PRICE_PER_KWH * 0.1).toFixed(2)})</p>
+                        <p className="text-sm text-muted-foreground">Reserve this charger for a future time slot.</p>
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <Label>Date</Label>
@@ -585,20 +588,47 @@ export default function DashboardLayout({ user }: { user: User }) {
                                     className="rounded-md border p-0"
                                 />
                             </div>
-                            <div className="flex-1">
-                                <Label>Time (30-min slots)</Label>
-                                <Select onValueChange={setBookingTime} value={bookingTime} required>
-                                    <SelectTrigger><SelectValue placeholder="Select a time" /></SelectTrigger>
-                                    <SelectContent className="max-h-60">
-                                        {timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                            <div className="flex-1 space-y-4">
+                                <div>
+                                    <Label>Time (30-min slots)</Label>
+                                    <Select onValueChange={setBookingTime} value={bookingTime} required>
+                                        <SelectTrigger><SelectValue placeholder="Select a time" /></SelectTrigger>
+                                        <SelectContent className="max-h-60">
+                                            {timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label>Energy (kWh)</Label>
+                                    <div className='flex items-center gap-4 pt-2'>
+                                        <Input 
+                                            type="number" 
+                                            min="1" 
+                                            max="100" 
+                                            step="1" 
+                                            value={kwhAmount} 
+                                            onChange={e => setKwhAmount(e.target.value)} 
+                                            required
+                                            className="w-24 text-center text-lg font-bold"
+                                        />
+                                        <Slider
+                                            value={[isNaN(kwhValue) ? 0 : kwhValue]}
+                                            onValueChange={(value) => setKwhAmount(String(value[0]))}
+                                            max={50}
+                                            min={1}
+                                            step={1}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        {kwhAmount && selectedCharger && !isNaN(kwhValue) && (
+                            <p className="text-center font-bold text-lg text-primary pt-4">Total Cost: ₹{calculatedCost}</p>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={closeAndResetModal}>Cancel</Button>
-                        <Button onClick={handleTimeSlotBooking} disabled={!selectedCharger || !bookingDate || !bookingTime} className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Payment</Button>
+                        <Button onClick={handleTimeSlotBooking} disabled={!selectedCharger || !bookingDate || !bookingTime || isNaN(kwhValue) || kwhValue <= 0} className="bg-accent hover:bg-accent/90 text-accent-foreground">Proceed to Payment</Button>
                     </DialogFooter>
                 </TabsContent>
               </Tabs>
