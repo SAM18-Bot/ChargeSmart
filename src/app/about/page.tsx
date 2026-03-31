@@ -141,7 +141,7 @@ export default function AboutPage() {
                         Founded in 2025, ChargeSmart was born from a simple observation: the future of driving is electric, but the charging experience was often fragmented and frustrating. A group of tech enthusiasts and environmental advocates came together with a shared goal: to build an EV charging platform that just works.
                     </p>
                     <p className="text-muted-foreground">
-                        From a single test charger in Pune, we've grown into a network spanning major Indian cities, powered by cutting-edge AI and a passion for customer satisfaction. We're not just building chargers; we're building the infrastructure for a cleaner tomorrow.
+                        From a single test charger in Pune, we've grown into a network spanning major Indian cities, powered by reliable software and a passion for customer satisfaction. We're not just building chargers; we're building the infrastructure for a cleaner tomorrow.
                     </p>
                 </div>
             </div>

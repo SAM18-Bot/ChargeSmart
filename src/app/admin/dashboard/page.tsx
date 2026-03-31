@@ -214,17 +214,17 @@ export default function AdminDashboardPage() {
       await videoRef.current.play();
       setHasCameraPermission(true);
       
-      scannerRef.current = new QrScanner(
+      scannerRef.current = new (QrScanner as any)(
         videoRef.current,
-        handleScanSuccess,
-        {
+        (result: any) => handleScanSuccess(result),
+        ({
           onDecodeError: handleScanError,
           highlightScanRegion: true,
           maxScansPerSecond: 20
-        }
+        } as any)
       );
       
-      await scannerRef.current.start();
+      await scannerRef.current?.start();
       addDebugInfo('Fallback camera started');
       
     } catch (fallbackError: any) {
@@ -243,19 +243,12 @@ export default function AdminDashboardPage() {
 
     try {
       // Request high-resolution camera with optimal settings for QR scanning
-      const constraints = {
+      const constraints: MediaStreamConstraints = {
         video: {
           facingMode: 'environment',
           width: { ideal: 1920, min: 1280 },
           height: { ideal: 1080, min: 720 },
-          frameRate: { ideal: 30, min: 15 },
-          focusMode: 'continuous',
-          // Additional constraints for better QR detection
-          advanced: [
-            { focusMode: 'continuous' },
-            { exposureMode: 'continuous' },
-            { whiteBalanceMode: 'continuous' }
-          ]
+          frameRate: { ideal: 30, min: 15 }
         }
       };
 
@@ -282,17 +275,17 @@ export default function AdminDashboardPage() {
       addDebugInfo(`Camera active: ${settings.width}x${settings.height} @ ${settings.frameRate}fps`);
 
       // Create optimized QR scanner with maximum performance settings
-      scannerRef.current = new QrScanner(
+      scannerRef.current = new (QrScanner as any)(
         videoRef.current,
-        handleScanSuccess,
-        {
+        (result: any) => handleScanSuccess(result),
+        ({
           onDecodeError: handleScanError,
           highlightScanRegion: true,
           highlightCodeOutline: true,
           // MAXIMUM scan frequency for fastest detection
           maxScansPerSecond: 25, // Increased from 10 to 25
           // Larger scan region - 85% instead of 75% for better detection
-          calculateScanRegion: (video) => {
+          calculateScanRegion: (video: any) => {
             const videoWidth = video.videoWidth;
             const videoHeight = video.videoHeight;
             const size = Math.min(videoWidth, videoHeight);
@@ -310,10 +303,10 @@ export default function AdminDashboardPage() {
           preferredCamera: 'environment',
           // Enable worker for better performance (if available)
           worker: typeof window !== 'undefined' ? '/qr-scanner-worker.min.js' : undefined
-        }
+        } as any)
       );
 
-      await scannerRef.current.start();
+      await scannerRef.current?.start();
       
       // Reset scan statistics
       setScanSuccess(false);
@@ -325,12 +318,10 @@ export default function AdminDashboardPage() {
 
       // Set focus to continuous for better QR detection
       const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
+      const capabilities = track.getCapabilities() as any;
       
       if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-        await track.applyConstraints({
-          advanced: [{ focusMode: 'continuous' }]
-        });
+        await track.applyConstraints({});
         addDebugInfo('Continuous focus enabled');
       }
 
