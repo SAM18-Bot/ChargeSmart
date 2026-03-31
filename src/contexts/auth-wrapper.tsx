@@ -19,15 +19,16 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isPublic = PUBLIC_ROUTES.includes(pathname);
-    const isProfileCompletion = pathname === PROFILE_COMPLETION_ROUTE;
-    const isAdminPage = pathname.startsWith('/admin');
+    const currentPath = pathname ?? '/';
+    const isPublic = PUBLIC_ROUTES.includes(currentPath);
+    const isProfileCompletion = currentPath === PROFILE_COMPLETION_ROUTE;
+    const isAdminPage = currentPath.startsWith('/admin');
 
     if (isAdminPage) {
       // Handle Admin routing
-      if (pathname === ADMIN_LOGIN_ROUTE && admin) {
+      if (currentPath === ADMIN_LOGIN_ROUTE && admin) {
         router.push(ADMIN_DASHBOARD_ROUTE);
-      } else if (pathname !== ADMIN_LOGIN_ROUTE && !admin) {
+      } else if (currentPath !== ADMIN_LOGIN_ROUTE && !admin) {
         router.push(ADMIN_LOGIN_ROUTE);
       }
     } else {
@@ -37,7 +38,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       } else if (user) {
         if (user.name === 'User' && !isProfileCompletion) {
           router.push(PROFILE_COMPLETION_ROUTE);
-        } else if (user.name !== 'User' && (isProfileCompletion || pathname === '/login' || pathname === '/register')) {
+        } else if (user.name !== 'User' && (isProfileCompletion || currentPath === '/login' || currentPath === '/register')) {
           router.push('/dashboard');
         }
       }
@@ -47,7 +48,8 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   // We only show a global loader for non-public pages and non-admin pages
   // to avoid flashes of the loader on public routes.
-  const showLoader = loading && !PUBLIC_ROUTES.includes(pathname) && !pathname.startsWith('/admin');
+  const currentPath = pathname ?? '/';
+  const showLoader = loading && !PUBLIC_ROUTES.includes(currentPath) && !currentPath.startsWith('/admin');
 
   if (showLoader) {
     return (

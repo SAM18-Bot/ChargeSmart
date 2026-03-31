@@ -72,7 +72,7 @@ const ValueDemonstrationSection = () => {
       solutions: [
         { icon: CheckCircle, text: "Instant station discovery", color: "text-green-500 dark:text-green-400" },
         { icon: CheckCircle, text: "Pre-book your slot", color: "text-green-500 dark:text-green-400" },
-        { icon: CheckCircle, text: "AI finds best rates", color: "text-green-500 dark:text-green-400" },
+        { icon: CheckCircle, text: "Smart pricing insights", color: "text-green-500 dark:text-green-400" },
         { icon: CheckCircle, text: "Real-time availability", color: "text-green-500 dark:text-green-400" }
       ]
     }
@@ -225,7 +225,7 @@ const UserJourneyAnimation = () => {
         },
         {
           title: "Optimize & Book", 
-          description: "Let AI find the best price and time, then book your slot.",
+          description: "Get practical price and time guidance, then book your slot.",
           icon: Bot,
         },
         {
@@ -384,9 +384,9 @@ export default function ChargeSmart() {
                                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                                     <Bot className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-bold text-foreground mb-4">AI Schedule Optimizer</h3>
+                                <h3 className="text-xl font-bold text-foreground mb-4">Schedule Optimizer</h3>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    Our AI assistant finds the most cost-effective and time-efficient charging plan for your EV.
+                                    Our optimizer helps suggest a cost-effective and time-efficient charging plan for your EV.
                                 </p>
                             </div>
                             

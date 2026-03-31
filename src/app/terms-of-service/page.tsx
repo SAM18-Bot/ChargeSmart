@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
           
           <h2>2. Description of Service</h2>
           <p>
-            ChargeSmart provides a platform to find, book, and manage electric vehicle (EV) charging stations. The service includes features like a map of chargers, real-time availability, queueing, and an AI assistant. All data presented is for demonstration purposes only.
+            ChargeSmart provides a platform to find, book, and manage electric vehicle (EV) charging stations. The service includes features like a map of chargers, real-time availability, queueing,. All data presented is for demonstration purposes only.
           </p>
           
           <h2>3. User Accounts</h2>

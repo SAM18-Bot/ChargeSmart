@@ -6,14 +6,12 @@ import ChargerCard from '@/components/dashboard/charger-card';
 import { MapView } from '@/components/dashboard/map-view';
 import { chargers as initialChargers, evs as initialEvs } from '@/lib/data';
 import type { Charger, EV, User, QueueItem, ChargingHistory, Booking } from '@/lib/types';
-import { AiAssistantDialog } from './ai-assistant-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Chatbot from '../chatbot/chatbot';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Calendar } from '../ui/calendar';
 import { add, format, set } from 'date-fns';
@@ -29,8 +27,6 @@ import { useBookings } from '@/contexts/booking-context';
 declare global {
     interface Window {
         Razorpay: any;
-        SpeechRecognition: any;
-        webkitSpeechRecognition: any;
     }
 }
 
@@ -341,10 +337,8 @@ export default function DashboardLayout({ user }: { user: User }) {
     try {
       const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData), {
         errorCorrectionLevel: 'H',
-        type: 'image/jpeg',
-        quality: 0.9,
         margin: 1,
-        color: { dark:"#29003D", light:"#FFFFFF" }
+        color: { dark:'#29003D', light:'#FFFFFF' }
       });
       setQrCodeData(qrDataUrl);
       setQrModalOpen(true);
@@ -383,7 +377,7 @@ export default function DashboardLayout({ user }: { user: User }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-background font-body">
-      <Header user={user} assistantDialog={<AiAssistantDialog evs={evs} chargers={chargers} pricePerKwh={PRICE_PER_KWH} chargerPower={CHARGER_POWER_KW} />} />
+      <Header user={user} assistantDialog={<div />} />
       <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-12">
 
         {/* Section 1: Welcome & Charging Options */}
@@ -473,7 +467,6 @@ export default function DashboardLayout({ user }: { user: User }) {
         </div>
       </footer>
 
-      <Chatbot />
       
       {/* Charging Options Modal */}
       <Dialog open={isChargeModalOpen} onOpenChange={closeAndResetModal}>
